@@ -2,11 +2,15 @@ const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
   renterId: { type: mongoose.Schema.Types.ObjectId, ref: 'Renter', required: true },
-  month: { type: String, required: true }, // format: "YYYY-MM"
+  adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
+  month: { type: String, required: true },
   amount: { type: Number, required: true },
-  status: { type: String, enum: ['Paid', 'Pending'], default: 'Pending' },
+  status: { type: String, enum: ['Paid', 'Pending', 'Under Review'], default: 'Pending' },
   paymentDate: { type: Date },
   notes: { type: String },
+  screenshotUrl: { type: String },
+  submittedAt: { type: Date },
+  approvedAt: { type: Date },
 }, { timestamps: true });
 
 // Prevent duplicate payment records per renter per month

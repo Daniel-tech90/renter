@@ -1,12 +1,28 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const renterSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
+  email: { type: String, trim: true, lowercase: true },
+  password: { type: String },
   phone: { type: String, required: true, trim: true },
   roomNumber: { type: String, required: true, trim: true },
   rentAmount: { type: Number, required: true },
-  dueDate: { type: Number, required: true, min: 1, max: 31 }, // day of month
+  dueDate: { type: Number, required: true, min: 1, max: 31 },
   isActive: { type: Boolean, default: true },
+  leftAt: { type: Date },
+  adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
+  role: { type: String, default: 'renter' },
 }, { timestamps: true });
+
+renterSchema.pre('save', async function (next) {
+  if (!this.isModified('password') || !this.password) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+renterSchema.methods.comparePassword = function (plain) {
+  return bcrypt.compare(plain, this.password);
+};
 
 module.exports = mongoose.model('Renter', renterSchema);

@@ -7,14 +7,18 @@ const { startCronJobs } = require('./services/cronService');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
+app.use('/uploads', require('express').static('uploads'));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/renters', require('./routes/renters'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/renter', require('./routes/renterDashboard'));
+app.use('/api/history', require('./routes/history'));
+app.use('/api/billing', require('./routes/billing'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

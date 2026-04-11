@@ -7,27 +7,28 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Renters from './pages/Renters';
 import Payments from './pages/Payments';
+import Billing from './pages/Billing';
+import History from './pages/History';
+import RenterDashboard from './pages/RenterDashboard';
 
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         <Routes>
+          {/* Admin routes */}
           <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
+          <Route path="/renter-login" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Dashboard />} />
             <Route path="renters" element={<Renters />} />
             <Route path="payments" element={<Payments />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="billing" element={<Billing />} />
+            <Route path="history" element={<History />} />
           </Route>
+          <Route path="/renter/dashboard" element={<RenterDashboard />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

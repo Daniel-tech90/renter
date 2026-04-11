@@ -44,6 +44,9 @@ export default function Renters() {
   const closeModal = () => { setShowModal(false); setEditing(null); };
   const onSuccess = () => { closeModal(); fetchRenters(); };
 
+  const occupiedRooms = new Set(renters.map((r) => r.roomNumber).filter(Boolean));
+  const emptyRoomRenters = renters.filter((r) => !r.roomNumber);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -127,9 +130,15 @@ export default function Renters() {
                     </td>
                     <td className="table-cell text-slate-500">📞 {r.phone}</td>
                     <td className="table-cell">
-                      <span className="bg-violet-50 text-violet-700 border border-violet-100 px-3 py-1 rounded-xl text-xs font-bold">
-                        Room {r.roomNumber}
-                      </span>
+                      {r.roomNumber ? (
+                        <span className="bg-violet-50 text-violet-700 border border-violet-100 px-3 py-1 rounded-xl text-xs font-bold">
+                          Room {r.roomNumber}
+                        </span>
+                      ) : (
+                        <span className="bg-slate-50 text-slate-400 border border-slate-200 px-3 py-1 rounded-xl text-xs font-semibold italic">
+                          No Room
+                        </span>
+                      )}
                     </td>
                     <td className="table-cell">
                       <span className="font-bold text-slate-800">₹{r.rentAmount.toLocaleString()}</span>
@@ -168,6 +177,42 @@ export default function Renters() {
         <Modal title={editing ? '✏️ Edit Renter' : '➕ Add New Renter'} onClose={closeModal}>
           <RenterForm renter={editing} onSuccess={onSuccess} onClose={closeModal} />
         </Modal>
+      )}
+
+      {/* Empty Rooms Section */}
+      {emptyRoomRenters.length > 0 && (
+        <div className="card">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-amber-200">
+              🚪
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Unassigned</p>
+              <p className="text-lg font-bold text-slate-800">{emptyRoomRenters.length} Empty Room{emptyRoomRenters.length > 1 ? 's' : ''}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {emptyRoomRenters.map((r) => (
+              <div key={r._id} className="flex items-center justify-between bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center text-sm font-bold text-amber-600">
+                    {r.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 text-sm">{r.name}</p>
+                    <p className="text-xs text-slate-400">{r.phone}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => openEdit(r)}
+                  className="text-xs bg-white border border-amber-200 text-amber-600 hover:bg-amber-100 px-3 py-1.5 rounded-xl font-semibold transition-all"
+                >
+                  Assign Room
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

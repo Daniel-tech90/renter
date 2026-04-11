@@ -3,26 +3,21 @@ const Payment = require('../models/Payment');
 
 exports.getStats = async (req, res) => {
   try {
-    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+    const adminId = req.adminId;
+    const currentMonth = new Date().toISOString().slice(0, 7);
 
     const [totalRenters, payments, monthlyPayments] = await Promise.all([
-      Renter.countDocuments({ isActive: true }),
-      Payment.find({ month: currentMonth }).populate('renterId', 'name roomNumber'),
+      Renter.countDocuments({ isActive: true, adminId }),
+      Payment.find({ month: currentMonth, adminId }).populate('renterId', 'name roomNumber'),
       Payment.aggregate([
-        { $match: { status: 'Paid' } },
-        {
-          $group: {
-            _id: '$month',
-            totalIncome: { $sum: '$amount' },
-            count: { $sum: 1 },
-          },
-        },
+        { $match: { status: 'Paid', adminId: require('mongoose').Types.ObjectId.createFromHexString(adminId.toString()) } },
+        { $group: { _id: '$month', totalIncome: { $sum: '$amount' }, count: { $sum: 1 } } },
         { $sort: { _id: -1 } },
         { $limit: 6 },
       ]),
     ]);
 
-    const paid = payments.filter((p) => p.status === 'Paid');
+    const paid    = payments.filter((p) => p.status === 'Paid');
     const pending = payments.filter((p) => p.status === 'Pending');
 
     res.json({
