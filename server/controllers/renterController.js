@@ -1,5 +1,6 @@
 const Renter = require('../models/Renter');
 const Payment = require('../models/Payment');
+const { sendWhatsApp } = require('../services/whatsappService');
 
 exports.getAll = async (req, res) => {
   try {
@@ -33,6 +34,10 @@ exports.create = async (req, res) => {
   try {
     const renter = new Renter({ ...req.body, adminId: req.adminId });
     await renter.save();
+    await sendWhatsApp(
+      renter.phone,
+      `Hello ${renter.name},\nWelcome to Ramishwar Sahu Rental Portal\n\nRoom: ${renter.roomNumber}\nRent: ₹${renter.rentAmount}\n\nThank you!`
+    );
     res.status(201).json(renter);
   } catch (err) {
     res.status(400).json({ message: err.message });
