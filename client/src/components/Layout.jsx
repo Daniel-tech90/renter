@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
@@ -11,10 +12,12 @@ export default function Layout() {
   const { pathname } = useLocation();
   const { title, subtitle } = titles[pathname] || { title: 'Portal', subtitle: '' };
 
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <Sidebar onHoverChange={setSidebarExpanded} />
+      <div className="flex-1 flex flex-col overflow-hidden" style={{ transition: 'margin-left 0.3s ease' }}>
         {/* Top bar */}
         <header className="bg-white border-b border-slate-100 px-8 py-4 flex items-center justify-between shadow-sm">
           <div>
