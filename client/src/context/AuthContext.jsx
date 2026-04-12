@@ -4,7 +4,11 @@ import api from '../services/api';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(() => localStorage.getItem('token'));
+  const [token, setToken] = useState(() => {
+    const t = localStorage.getItem('token');
+    if (t) api.defaults.headers.common['Authorization'] = `Bearer ${t}`;
+    return t;
+  });
   const [admin, setAdmin] = useState(() => {
     const saved = localStorage.getItem('admin');
     return saved ? JSON.parse(saved) : null;
