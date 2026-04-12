@@ -22,17 +22,26 @@ function MonthGrid({ renterId, year }) {
   if (loading) return <div className="w-4 h-4 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" />;
 
   return (
-    <div className="flex gap-1 flex-wrap">
+    <div className="flex gap-1.5 flex-wrap">
       {MONTH_NAMES.map((name, i) => {
         const month = `${year}-${String(i + 1).padStart(2, '0')}`;
         const status = monthData[month];
-        let bg, title;
-        if (!status || status === 'Room Closed') { bg = 'bg-slate-200'; title = `${name} — Room Closed`; }
-        else if (status === 'Paid') { bg = 'bg-emerald-500'; title = `${name} — Paid`; }
-        else { bg = 'bg-red-400'; title = `${name} — ${status}`; }
+        let bg, text, ring;
+        if (!status || status === 'Room Closed') {
+          bg = 'bg-slate-100'; text = 'text-slate-400'; ring = 'ring-slate-200';
+        } else if (status === 'Paid') {
+          bg = 'bg-emerald-500'; text = 'text-white'; ring = 'ring-emerald-400';
+        } else {
+          bg = 'bg-red-500'; text = 'text-white'; ring = 'ring-red-400';
+        }
         return (
-          <div key={month} title={title} className={`w-6 h-6 rounded-md ${bg} flex items-center justify-center`}>
-            <span className="text-white text-[8px] font-bold">{name.slice(0,1)}</span>
+          <div
+            key={month}
+            title={`${name} ${year} — ${status || 'Room Closed'}`}
+            className={`w-8 h-8 rounded-lg ${bg} ${text} ring-1 ${ring} flex flex-col items-center justify-center cursor-default shadow-sm`}
+          >
+            <span className="text-[9px] font-bold leading-none">{name.slice(0, 1)}</span>
+            <span className="text-[8px] leading-none opacity-80">{i + 1}</span>
           </div>
         );
       })}
@@ -181,10 +190,10 @@ export default function YearlySummary() {
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-bold text-slate-800">Tenant-wise Summary — {year}</h3>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 text-xs text-slate-500">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500 inline-block"></span> Paid</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-400 inline-block"></span> Due</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-slate-200 inline-block"></span> Closed</span>
+            <div className="flex items-center gap-3 text-xs font-semibold">
+              <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded-md bg-emerald-500 shadow-sm inline-block"></span><span className="text-emerald-700">Paid</span></span>
+              <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded-md bg-red-500 shadow-sm inline-block"></span><span className="text-red-600">Due</span></span>
+              <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded-md bg-slate-100 ring-1 ring-slate-200 inline-block"></span><span className="text-slate-500">Closed</span></span>
             </div>
             <span className="text-xs bg-slate-100 text-slate-500 font-semibold px-3 py-1.5 rounded-xl">{summary.length} tenants</span>
           </div>
