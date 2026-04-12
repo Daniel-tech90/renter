@@ -1,14 +1,97 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { paymentService } from '../services';
+import Modal from '../components/Modal';
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function TenantHistoryModal({ renterId, renterName, onClose }) {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    paymentService.getByRenter(renterId)
+      .then(({ data }) => setPayments(data))
+      .catch(() => toast.error('Failed to load history'))
+      .finally(() => setLoading(false));
+  }, [renterId]);
+
+  const totalPaid = payments.filter(p => p.status === 'Paid').reduce((s, p) => s + (p.totalAmount || p.amount), 0);
+  const totalDue = payments.filter(p => p.status === 'Pending').reduce((s, p) => s + (p.totalAmount || p.amount), 0);
+
+  return (
+    <Modal title={`📋 ${renterName} — Payment History`} onClose={onClose}>
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3">
+              <p className="text-xs text-emerald-600 font-semibold uppercase tracking-wide">Total Paid</p>
+              <p className="text-xl font-bold text-emerald-700">₹{totalPaid.toLocaleString('en-IN')}</p>
+            </div>
+            <div className="bg-red-50 border border-red-100 rounded-2xl px-4 py-3">
+              <p className="text-xs text-red-500 font-semibold uppercase tracking-wide">Total Due</p>
+              <p className="text-xl font-bold text-red-600">₹{totalDue.toLocaleString('en-IN')}</p>
+            </div>
+          </div>
+          {payments.length === 0 ? (
+            <p className="text-center text-slate-400 py-8">No payment records found</p>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-slate-100 max-h-[60vh] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 sticky top-0">
+                  <tr>
+                    <th className="table-header text-left">Month</th>
+                    <th className="table-header text-left">Rent</th>
+                    <th className="table-header text-left">Units</th>
+                    <th className="table-header text-left">Elec. Bill</th>
+                    <th className="table-header text-left">Total</th>
+                    <th className="table-header text-left">Status</th>
+                    <th className="table-header text-left">Paid On</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white">
+                  {payments.map((p) => (
+                    <tr key={p._id} className={`border-b border-slate-50 ${
+                      p.status === 'Room Closed' ? 'bg-slate-50/80 opacity-60' : 'hover:bg-slate-50/50'
+                    }`}>
+                      <td className="table-cell font-semibold text-slate-700">{p.month}</td>
+                      <td className="table-cell text-slate-700">{p.status === 'Room Closed' ? '—' : `₹${p.amount.toLocaleString('en-IN')}`}</td>
+                      <td className="table-cell text-slate-500">{p.status === 'Room Closed' ? '—' : `${p.unitsConsumed || 0} u`}</td>
+                      <td className="table-cell text-slate-600">{p.status === 'Room Closed' ? '—' : `₹${(p.electricityBill || 0).toLocaleString('en-IN')}`}</td>
+                      <td className="table-cell font-bold text-indigo-700">{p.status === 'Room Closed' ? '—' : `₹${(p.totalAmount || p.amount).toLocaleString('en-IN')}`}</td>
+                      <td className="table-cell">
+                        <span className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
+                          p.status === 'Paid' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                          p.status === 'Room Closed' ? 'bg-slate-100 text-slate-400 border border-slate-200' :
+                          p.status === 'Under Review' ? 'bg-yellow-50 text-yellow-600 border border-yellow-100' :
+                          'bg-red-50 text-red-500 border border-red-100'
+                        }`}>{p.status}</span>
+                      </td>
+                      <td className="table-cell text-slate-400 text-xs">
+                        {p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </Modal>
+  );
+}
 
 export default function YearlySummary() {
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(new Date().getFullYear());
   const [expandedId, setExpandedId] = useState(null);
+  const [tenantHistory, setTenantHistory] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -96,7 +179,12 @@ export default function YearlySummary() {
                           <div className="w-9 h-9 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-xs font-bold text-violet-600 flex-shrink-0">
                             {t.renter.name.slice(0, 2).toUpperCase()}
                           </div>
-                          <span className="font-semibold text-slate-800">{t.renter.name}</span>
+                          <button
+                            onClick={() => setTenantHistory({ renterId: t.renter._id, renterName: t.renter.name })}
+                            className="font-semibold text-slate-800 hover:text-violet-600 hover:underline transition-colors text-left"
+                          >
+                            {t.renter.name}
+                          </button>
                         </div>
                       </td>
                       <td className="table-cell">
@@ -159,6 +247,13 @@ export default function YearlySummary() {
           </div>
         )}
       </div>
+      {tenantHistory && (
+        <TenantHistoryModal
+          renterId={tenantHistory.renterId}
+          renterName={tenantHistory.renterName}
+          onClose={() => setTenantHistory(null)}
+        />
+      )}
     </div>
   );
 }
