@@ -130,7 +130,45 @@ function TenantHistoryModal({ renterId, renterName, onClose }) {
   );
 }
 
-export default function YearlySummary() {
+function ExpandedMonths({ renterId, year, allMonths }) {
+  const [monthData, setMonthData] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    paymentService.getByRenter(renterId)
+      .then(({ data }) => {
+        const map = {};
+        data.forEach(p => { map[p.month] = p.status; });
+        setMonthData(map);
+      })
+      .finally(() => setLoading(false));
+  }, [renterId]);
+
+  if (loading) return <div className="w-4 h-4 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" />;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {MONTH_NAMES.map((name, i) => {
+        const month = `${year}-${String(i + 1).padStart(2, '0')}`;
+        const status = monthData[month];
+        let bg, text, dot;
+        if (!status || status === 'Room Closed') {
+          bg = 'bg-slate-100 border-slate-200 text-slate-400'; dot = 'bg-slate-300';
+        } else if (status === 'Paid') {
+          bg = 'bg-emerald-50 border-emerald-200 text-emerald-700'; dot = 'bg-emerald-500';
+        } else {
+          bg = 'bg-red-50 border-red-200 text-red-600'; dot = 'bg-red-500';
+        }
+        return (
+          <span key={month} className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm ${bg}`}>
+            <span className={`w-2.5 h-2.5 rounded-sm ${dot} inline-block flex-shrink-0`}></span>
+            {name} {year}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -279,18 +317,8 @@ export default function YearlySummary() {
                     </tr>
                     {expandedId === t.renter._id && (
                       <tr key={`${t.renter._id}-expanded`} className="bg-slate-50">
-                        <td colSpan={7} className="px-6 py-3">
-                          <div className="flex flex-wrap gap-2">
-                            {t.pendingMonths.map(m => {
-                              const [yr, mo] = m.split('-');
-                              return (
-                                <span key={m} className="flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
-                                  <span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block flex-shrink-0"></span>
-                                  {MONTH_NAMES[Number(mo) - 1]} {yr}
-                                </span>
-                              );
-                            })}
-                          </div>
+                        <td colSpan={7} className="px-6 py-4">
+                          <ExpandedMonths renterId={t.renter._id} year={year} />
                         </td>
                       </tr>
                     )}
