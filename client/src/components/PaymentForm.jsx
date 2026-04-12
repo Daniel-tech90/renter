@@ -31,11 +31,19 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
     }
   }, [payment]);
 
-  const set = (e) => {
+  const set = async (e) => {
     const updated = { ...form, [e.target.name]: e.target.value };
     if (e.target.name === 'renterId') {
       const r = renters.find((r) => r._id === e.target.value);
       if (r) updated.amount = r.rentAmount;
+      if (e.target.value) {
+        try {
+          const { data } = await paymentService.getLastReading(e.target.value);
+          updated.prevReading = data.prevReading;
+        } catch {
+          updated.prevReading = 0;
+        }
+      }
     }
     setForm(updated);
     setError('');

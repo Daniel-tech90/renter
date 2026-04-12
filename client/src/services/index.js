@@ -21,6 +21,7 @@ export const renterService = {
 export const paymentService = {
   getAll: (params = {}) => api.get('/payments', { params }),
   getByRenter: (renterId) => api.get(`/payments/renter/${renterId}`),
+  getLastReading: (renterId) => api.get(`/payments/renter/${renterId}/last-reading`),
   create: (data) => api.post('/payments', data),
   update: (id, data) => api.put(`/payments/${id}`, data),
   getReceiptUrl: (id) => `/api/payments/${id}/receipt`,

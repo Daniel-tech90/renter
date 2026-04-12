@@ -5,6 +5,18 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
 
+exports.getLastReading = async (req, res) => {
+  try {
+    const last = await Payment.findOne(
+      { renterId: req.params.renterId, adminId: req.adminId, currReading: { $gt: 0 } },
+      { currReading: 1, month: 1 }
+    ).sort({ month: -1 });
+    res.json({ prevReading: last ? last.currReading : 0, month: last?.month || null });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.getByRenter = async (req, res) => {
   try {
     const payments = await Payment.find({ renterId: req.params.renterId, adminId: req.adminId })
