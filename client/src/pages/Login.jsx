@@ -106,7 +106,7 @@ export default function Login() {
                 onClick={() => handleTabSwitch('tenant')}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${!isAdmin ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
               >
-                🏠 Tenant
+                🏠 Renter Login
               </button>
               <button
                 onClick={() => handleTabSwitch('admin')}
@@ -118,7 +118,7 @@ export default function Login() {
 
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white">
-                {isAdmin ? 'Admin Login 🔐' : 'Tenant Login 🏠'}
+                {isAdmin ? 'Admin Login 🔐' : 'Renter Login 🏠'}
               </h2>
               <p className={`text-sm mt-1 ${isAdmin ? 'text-indigo-200' : 'text-emerald-200'}`}>
                 {isAdmin ? 'Sign in to manage your rental properties' : 'Sign in to view your rent details'}
