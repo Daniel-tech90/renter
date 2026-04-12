@@ -5,6 +5,41 @@ import Modal from '../components/Modal';
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+function MonthGrid({ renterId, year }) {
+  const [monthData, setMonthData] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    paymentService.getByRenter(renterId)
+      .then(({ data }) => {
+        const map = {};
+        data.forEach(p => { map[p.month] = p.status; });
+        setMonthData(map);
+      })
+      .finally(() => setLoading(false));
+  }, [renterId]);
+
+  if (loading) return <div className="w-4 h-4 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" />;
+
+  return (
+    <div className="flex gap-1 flex-wrap">
+      {MONTH_NAMES.map((name, i) => {
+        const month = `${year}-${String(i + 1).padStart(2, '0')}`;
+        const status = monthData[month];
+        let bg, title;
+        if (!status || status === 'Room Closed') { bg = 'bg-slate-200'; title = `${name} — Room Closed`; }
+        else if (status === 'Paid') { bg = 'bg-emerald-500'; title = `${name} — Paid`; }
+        else { bg = 'bg-red-400'; title = `${name} — ${status}`; }
+        return (
+          <div key={month} title={title} className={`w-6 h-6 rounded-md ${bg} flex items-center justify-center`}>
+            <span className="text-white text-[8px] font-bold">{name.slice(0,1)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function TenantHistoryModal({ renterId, renterName, onClose }) {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -145,7 +180,14 @@ export default function YearlySummary() {
       <div className="card">
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-bold text-slate-800">Tenant-wise Summary — {year}</h3>
-          <span className="text-xs bg-slate-100 text-slate-500 font-semibold px-3 py-1.5 rounded-xl">{summary.length} tenants</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 text-xs text-slate-500">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500 inline-block"></span> Paid</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-400 inline-block"></span> Due</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-slate-200 inline-block"></span> Closed</span>
+            </div>
+            <span className="text-xs bg-slate-100 text-slate-500 font-semibold px-3 py-1.5 rounded-xl">{summary.length} tenants</span>
+          </div>
         </div>
 
         {loading ? (
@@ -167,6 +209,7 @@ export default function YearlySummary() {
                   <th className="table-header text-center">Months Paid</th>
                   <th className="table-header text-center">Months Due</th>
                   <th className="table-header text-left">Total Paid</th>
+                  <th className="table-header text-left">Month Status</th>
                   <th className="table-header text-left">Unpaid Months</th>
                 </tr>
               </thead>
@@ -211,6 +254,7 @@ export default function YearlySummary() {
                         </span>
                       </td>
                       <td className="table-cell font-bold text-emerald-700">₹{t.totalPaid.toLocaleString('en-IN')}</td>
+                      <td className="table-cell"><MonthGrid renterId={t.renter._id} year={year} /></td>
                       <td className="table-cell">
                         {t.pendingMonths.length === 0 ? (
                           <span className="text-slate-300 text-xs">—</span>
