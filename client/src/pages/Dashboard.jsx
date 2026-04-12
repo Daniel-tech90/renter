@@ -134,7 +134,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Payments Table */}
+      {/* Recent Payments */}
       <div className="card">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -145,7 +145,34 @@ export default function Dashboard() {
             {currentMonth.payments.length} records
           </span>
         </div>
-        <div className="overflow-x-auto">
+
+        {/* Mobile cards */}
+        <div className="sm:hidden space-y-3">
+          {currentMonth.payments.length === 0 ? (
+            <div className="py-10 text-center">
+              <div className="text-3xl mb-2">📋</div>
+              <p className="text-slate-400 text-sm">No payment records this month</p>
+            </div>
+          ) : currentMonth.payments.map((p) => (
+            <div key={p._id} className="mobile-card">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-800">{p.renterId?.name}</span>
+                <span className={p.status === 'Paid' ? 'badge-paid' : 'badge-pending'}>
+                  {p.status === 'Paid' ? '✓' : '⏳'} {p.status}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="bg-violet-50 text-violet-700 border border-violet-100 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                  Room {p.renterId?.roomNumber}
+                </span>
+                <span className="font-semibold text-slate-800">₹{p.amount.toLocaleString()}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100">
@@ -163,24 +190,22 @@ export default function Dashboard() {
                     <p className="text-slate-400 text-sm">No payment records this month</p>
                   </td>
                 </tr>
-              ) : (
-                currentMonth.payments.map((p) => (
-                  <tr key={p._id} className="table-row">
-                    <td className="table-cell font-semibold text-slate-800">{p.renterId?.name}</td>
-                    <td className="table-cell">
-                      <span className="bg-violet-50 text-violet-700 border border-violet-100 px-2.5 py-1 rounded-lg text-xs font-semibold">
-                        Room {p.renterId?.roomNumber}
-                      </span>
-                    </td>
-                    <td className="table-cell font-semibold">₹{p.amount.toLocaleString()}</td>
-                    <td className="table-cell">
-                      <span className={p.status === 'Paid' ? 'badge-paid' : 'badge-pending'}>
-                        {p.status === 'Paid' ? '✓' : '⏳'} {p.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ) : currentMonth.payments.map((p) => (
+                <tr key={p._id} className="table-row">
+                  <td className="table-cell font-semibold text-slate-800">{p.renterId?.name}</td>
+                  <td className="table-cell">
+                    <span className="bg-violet-50 text-violet-700 border border-violet-100 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                      Room {p.renterId?.roomNumber}
+                    </span>
+                  </td>
+                  <td className="table-cell font-semibold">₹{p.amount.toLocaleString()}</td>
+                  <td className="table-cell">
+                    <span className={p.status === 'Paid' ? 'badge-paid' : 'badge-pending'}>
+                      {p.status === 'Paid' ? '✓' : '⏳'} {p.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

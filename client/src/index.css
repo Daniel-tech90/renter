@@ -8,9 +8,22 @@
   * {
     box-sizing: border-box;
   }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
   body {
     @apply bg-slate-50 text-slate-800 antialiased;
     font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
   }
   ::-webkit-scrollbar {
     width: 6px;
@@ -77,12 +90,28 @@
     @apply border-b border-slate-50 hover:bg-violet-50/40 transition-colors duration-150;
   }
 
+  /* Mobile card list — replaces table rows on small screens */
+  .mobile-card {
+    @apply bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-2;
+  }
+  .mobile-card-row {
+    @apply flex items-center justify-between text-sm;
+  }
+  .mobile-card-label {
+    @apply text-xs font-semibold text-slate-400 uppercase tracking-wide;
+  }
+
+  /* Responsive table wrapper */
+  .table-responsive {
+    @apply overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0;
+  }
+
   /* Page header */
   .page-header {
-    @apply flex items-center justify-between mb-8;
+    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8;
   }
   .page-title {
-    @apply text-2xl font-bold text-slate-800 tracking-tight;
+    @apply text-xl sm:text-2xl font-bold text-slate-800 tracking-tight;
   }
   .page-subtitle {
     @apply text-sm text-slate-400 mt-0.5;

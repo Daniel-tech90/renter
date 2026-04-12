@@ -27,7 +27,6 @@ function TenantHistoryModal({ renterId, renterName, onClose }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Summary */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3">
               <p className="text-xs text-emerald-600 font-semibold uppercase tracking-wide">Total Paid</p>
@@ -38,8 +37,6 @@ function TenantHistoryModal({ renterId, renterName, onClose }) {
               <p className="text-xl font-bold text-red-600">₹{totalDue.toLocaleString('en-IN')}</p>
             </div>
           </div>
-
-          {/* Table */}
           {payments.length === 0 ? (
             <p className="text-center text-slate-400 py-8">No payment records found</p>
           ) : (
@@ -50,7 +47,7 @@ function TenantHistoryModal({ renterId, renterName, onClose }) {
                     <th className="table-header text-left">Month</th>
                     <th className="table-header text-left">Rent</th>
                     <th className="table-header text-left">Units</th>
-                    <th className="table-header text-left">Elec. Bill</th>
+                    <th className="table-header text-left">Elec.</th>
                     <th className="table-header text-left">Total</th>
                     <th className="table-header text-left">Status</th>
                     <th className="table-header text-left">Paid On</th>
@@ -95,13 +92,10 @@ export default function Payments() {
   const [filters, setFilters] = useState({ status: '', month: '' });
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [screenshot, setScreenshot] = useState(null); // { paymentId, file }
-  const [viewScreenshot, setViewScreenshot] = useState(null); // url to view
-  const [uploading, setUploading] = useState(null); // paymentId being uploaded
-
+  const [viewScreenshot, setViewScreenshot] = useState(null);
   const [sending, setSending] = useState(null);
   const [generatingBill, setGeneratingBill] = useState(null);
-  const [tenantHistory, setTenantHistory] = useState(null); // { renterId, renterName }
+  const [tenantHistory, setTenantHistory] = useState(null);
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
@@ -121,6 +115,7 @@ export default function Payments() {
   const openEdit = (p) => { setEditing(p); setShowModal(true); };
   const closeModal = () => { setShowModal(false); setEditing(null); };
   const onSuccess = () => { closeModal(); fetchPayments(); };
+
   const downloadBill = async (id) => {
     setGeneratingBill(id);
     try {
@@ -155,20 +150,6 @@ export default function Payments() {
       window.URL.revokeObjectURL(url);
     } catch {
       toast.error('Failed to download receipt');
-    }
-  };
-
-  const handleScreenshotUpload = async (paymentId, file) => {
-    if (!file) return;
-    setUploading(paymentId);
-    try {
-      await paymentService.submitScreenshot(paymentId, file);
-      toast.success('Screenshot submitted! Awaiting approval.');
-      fetchPayments();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Upload failed');
-    } finally {
-      setUploading(null);
     }
   };
 
@@ -210,7 +191,6 @@ export default function Payments() {
   const reviewCount = payments.filter(p => p.status === 'Under Review').length;
   const totalAmount = payments.filter(p => p.status === 'Paid').reduce((s, p) => s + p.amount, 0);
 
-  // Show one row per tenant (latest record) unless month filter is active
   const displayPayments = filters.month
     ? payments
     : Object.values(
@@ -228,21 +208,56 @@ export default function Payments() {
     return <span className="badge-pending">⏳ Pending</span>;
   };
 
+  const ActionButtons = ({ p }) => (
+    <div className="flex items-center gap-2 flex-wrap">
+      {p.status === 'Under Review' && (
+        <>
+          <button onClick={() => handleApprove(p._id)} className="btn-ghost bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-semibold">✅ Approve</button>
+          <button onClick={() => handleReject(p._id)} className="btn-ghost bg-red-50 text-red-500 hover:bg-red-100">❌ Reject</button>
+        </>
+      )}
+      {p.status !== 'Under Review' && (
+        <button onClick={() => openEdit(p)} className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100">✏️ Edit</button>
+      )}
+      {p.status === 'Paid' && (
+        <>
+          <button
+            onClick={() => handleSendMessage(p._id, 'confirmation')}
+            disabled={sending === p._id + 'confirmation'}
+            className="btn-ghost bg-green-50 text-green-600 hover:bg-green-100 disabled:opacity-50"
+          >
+            {sending === p._id + 'confirmation' ? '⏳' : '📱'} Confirm
+          </button>
+          <button onClick={() => downloadReceipt(p._id)} className="btn-ghost bg-emerald-50 text-emerald-600 hover:bg-emerald-100">🧾 Receipt</button>
+        </>
+      )}
+      {p.status === 'Pending' && (
+        <button
+          onClick={() => handleSendMessage(p._id, 'reminder')}
+          disabled={sending === p._id + 'reminder'}
+          className="btn-ghost bg-amber-50 text-amber-600 hover:bg-amber-100 disabled:opacity-50"
+        >
+          {sending === p._id + 'reminder' ? '⏳' : '⏰'} Remind
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Summary Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: 'Total', value: payments.length, icon: '📋', color: 'bg-slate-50 border-slate-200 text-slate-700' },
           { label: 'Paid', value: paidCount, icon: '✅', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
           { label: 'Under Review', value: reviewCount, icon: '📸', color: 'bg-blue-50 border-blue-200 text-blue-700' },
           { label: 'Pending', value: pendingCount, icon: '⏳', color: 'bg-amber-50 border-amber-200 text-amber-700' },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} className={`flex items-center gap-3 px-5 py-4 rounded-2xl border ${color} font-semibold`}>
-            <span className="text-2xl">{icon}</span>
+          <div key={label} className={`flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 rounded-2xl border ${color} font-semibold`}>
+            <span className="text-xl sm:text-2xl">{icon}</span>
             <div>
               <p className="text-xs opacity-70 font-medium">{label}</p>
-              <p className="text-xl font-bold">{value}</p>
+              <p className="text-lg sm:text-xl font-bold">{value}</p>
             </div>
           </div>
         ))}
@@ -250,8 +265,8 @@ export default function Payments() {
 
       {/* Under Review Alert */}
       {reviewCount > 0 && (
-        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-5 py-4">
-          <span className="text-2xl">📸</span>
+        <div className="flex items-start sm:items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-4 sm:px-5 py-4">
+          <span className="text-2xl flex-shrink-0">📸</span>
           <div>
             <p className="font-bold text-blue-800">{reviewCount} payment{reviewCount > 1 ? 's' : ''} waiting for your approval!</p>
             <p className="text-blue-600 text-sm">Review the screenshots below and approve or reject.</p>
@@ -262,10 +277,10 @@ export default function Payments() {
       {/* Main Card */}
       <div className="card">
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+          <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
             <select
-              className="input max-w-[180px]"
+              className="input flex-1 sm:flex-none sm:max-w-[180px]"
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             >
@@ -276,7 +291,7 @@ export default function Payments() {
             </select>
             <input
               type="month"
-              className="input max-w-[190px]"
+              className="input flex-1 sm:flex-none sm:max-w-[190px]"
               value={filters.month}
               onChange={(e) => setFilters({ ...filters, month: e.target.value })}
             />
@@ -286,13 +301,67 @@ export default function Payments() {
               </button>
             )}
           </div>
-          <button className="btn-primary whitespace-nowrap" onClick={openAdd}>
+          <button className="btn-primary w-full sm:w-auto whitespace-nowrap" onClick={openAdd}>
             ＋ Record Payment
           </button>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-slate-100">
+        {/* Mobile cards */}
+        <div className="lg:hidden space-y-3">
+          {loading ? (
+            <div className="py-16 text-center">
+              <div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-slate-400 text-sm">Loading payments...</p>
+            </div>
+          ) : displayPayments.length === 0 ? (
+            <div className="py-16 text-center">
+              <div className="text-4xl mb-3">💳</div>
+              <p className="text-slate-500 font-semibold">No payments found</p>
+            </div>
+          ) : displayPayments.map((p) => (
+            <div key={p._id} className={`mobile-card ${p.status === 'Under Review' ? 'border-blue-200 bg-blue-50/30' : ''}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-xs font-bold text-violet-600 flex-shrink-0">
+                    {p.renterId?.name?.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => setTenantHistory({ renterId: p.renterId?._id, renterName: p.renterId?.name })}
+                      className="font-semibold text-slate-800 hover:text-violet-600 text-sm text-left"
+                    >
+                      {p.renterId?.name}
+                    </button>
+                    <p className="text-xs text-slate-400">
+                      <span className="bg-violet-50 text-violet-700 border border-violet-100 px-1.5 py-0.5 rounded text-xs font-bold">Room {p.renterId?.roomNumber}</span>
+                      <span className="ml-2">{p.month}</span>
+                    </p>
+                  </div>
+                </div>
+                {statusBadge(p.status)}
+              </div>
+              <div className="flex items-center justify-between text-sm pt-1 border-t border-slate-50">
+                <div>
+                  <p className="text-xs text-slate-400">Rent + Elec.</p>
+                  <p className="font-bold text-indigo-700">₹{(p.totalAmount || p.amount).toLocaleString()}</p>
+                </div>
+                <button
+                  onClick={() => downloadBill(p._id)}
+                  disabled={generatingBill === p._id}
+                  className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100 disabled:opacity-50 text-xs min-h-[36px]"
+                >
+                  {generatingBill === p._id ? '⏳' : '🧾'} Bill
+                </button>
+              </div>
+              <div className="pt-1 border-t border-slate-50">
+                <ActionButtons p={p} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden lg:block overflow-x-auto rounded-xl border border-slate-100">
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
@@ -310,108 +379,63 @@ export default function Payments() {
             <tbody className="bg-white">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center">
+                  <td colSpan={9} className="py-16 text-center">
                     <div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mx-auto mb-3" />
                     <p className="text-slate-400 text-sm">Loading payments...</p>
                   </td>
                 </tr>
-              ) : payments.length === 0 ? (
+              ) : displayPayments.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center">
+                  <td colSpan={9} className="py-16 text-center">
                     <div className="text-4xl mb-3">💳</div>
                     <p className="text-slate-500 font-semibold">No payments found</p>
                   </td>
                 </tr>
-              ) : (
-                displayPayments.map((p) => (
-                  <tr key={p._id} className={`table-row ${p.status === 'Under Review' ? 'bg-blue-50/30' : ''}`}>
-                    <td className="table-cell">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-xs font-bold text-violet-600 flex-shrink-0">
-                          {p.renterId?.name?.slice(0, 2).toUpperCase()}
-                        </div>
-                        <button
-                          onClick={() => setTenantHistory({ renterId: p.renterId?._id, renterName: p.renterId?.name })}
-                          className="font-semibold text-slate-800 hover:text-violet-600 hover:underline transition-colors text-left"
-                        >
-                          {p.renterId?.name}
-                        </button>
+              ) : displayPayments.map((p) => (
+                <tr key={p._id} className={`table-row ${p.status === 'Under Review' ? 'bg-blue-50/30' : ''}`}>
+                  <td className="table-cell">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-xs font-bold text-violet-600 flex-shrink-0">
+                        {p.renterId?.name?.slice(0, 2).toUpperCase()}
                       </div>
-                    </td>
-                    <td className="table-cell">
-                      <span className="bg-violet-50 text-violet-700 border border-violet-100 px-2.5 py-1 rounded-lg text-xs font-bold">
-                        Room {p.renterId?.roomNumber}
-                      </span>
-                    </td>
-                    <td className="table-cell font-medium text-slate-600">{p.month}</td>
-                    <td className="table-cell font-bold text-slate-800">₹{p.amount.toLocaleString()}</td>
-                    <td className="table-cell text-slate-600">₹{(p.electricityBill || 0).toLocaleString()}</td>
-                    <td className="table-cell font-bold text-indigo-700">₹{(p.totalAmount || p.amount).toLocaleString()}</td>
-                    <td className="table-cell">{statusBadge(p.status)}</td>
-
-                    {/* Bill Column */}
-                    <td className="table-cell">
                       <button
-                        onClick={() => downloadBill(p._id)}
-                        disabled={generatingBill === p._id}
-                        className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100 disabled:opacity-50"
+                        onClick={() => setTenantHistory({ renterId: p.renterId?._id, renterName: p.renterId?.name })}
+                        className="font-semibold text-slate-800 hover:text-violet-600 hover:underline transition-colors text-left"
                       >
-                        {generatingBill === p._id ? '⏳' : '🧾'} {generatingBill === p._id ? 'Generating...' : 'Generate Bill'}
+                        {p.renterId?.name}
                       </button>
-                    </td>
-
-                    {/* Actions Column */}
-                    <td className="table-cell">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {p.status === 'Under Review' && (
-                          <>
-                            <button onClick={() => handleApprove(p._id)} className="btn-ghost bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-semibold">
-                              ✅ Approve
-                            </button>
-                            <button onClick={() => handleReject(p._id)} className="btn-ghost bg-red-50 text-red-500 hover:bg-red-100">
-                              ❌ Reject
-                            </button>
-                          </>
-                        )}
-                        {p.status !== 'Under Review' && (
-                          <button onClick={() => openEdit(p)} className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100">
-                            ✏️ Edit
-                          </button>
-                        )}
-                        {p.status === 'Paid' && (
-                          <>
-                            <button
-                              onClick={() => handleSendMessage(p._id, 'confirmation')}
-                              disabled={sending === p._id + 'confirmation'}
-                              className="btn-ghost bg-green-50 text-green-600 hover:bg-green-100 disabled:opacity-50"
-                            >
-                              {sending === p._id + 'confirmation' ? '⏳' : '📱'} Confirm
-                            </button>
-                            <button onClick={() => downloadReceipt(p._id)} className="btn-ghost bg-emerald-50 text-emerald-600 hover:bg-emerald-100">
-                              🧾 Receipt
-                            </button>
-                          </>
-                        )}
-                        {p.status === 'Pending' && (
-                          <button
-                            onClick={() => handleSendMessage(p._id, 'reminder')}
-                            disabled={sending === p._id + 'reminder'}
-                            className="btn-ghost bg-amber-50 text-amber-600 hover:bg-amber-100 disabled:opacity-50"
-                          >
-                            {sending === p._id + 'reminder' ? '⏳' : '⏰'} Remind
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+                    </div>
+                  </td>
+                  <td className="table-cell">
+                    <span className="bg-violet-50 text-violet-700 border border-violet-100 px-2.5 py-1 rounded-lg text-xs font-bold">
+                      Room {p.renterId?.roomNumber}
+                    </span>
+                  </td>
+                  <td className="table-cell font-medium text-slate-600">{p.month}</td>
+                  <td className="table-cell font-bold text-slate-800">₹{p.amount.toLocaleString()}</td>
+                  <td className="table-cell text-slate-600">₹{(p.electricityBill || 0).toLocaleString()}</td>
+                  <td className="table-cell font-bold text-indigo-700">₹{(p.totalAmount || p.amount).toLocaleString()}</td>
+                  <td className="table-cell">{statusBadge(p.status)}</td>
+                  <td className="table-cell">
+                    <button
+                      onClick={() => downloadBill(p._id)}
+                      disabled={generatingBill === p._id}
+                      className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100 disabled:opacity-50"
+                    >
+                      {generatingBill === p._id ? '⏳' : '🧾'} {generatingBill === p._id ? 'Generating...' : 'Generate Bill'}
+                    </button>
+                  </td>
+                  <td className="table-cell">
+                    <ActionButtons p={p} />
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
         {displayPayments.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-sm">
+          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm">
             <p className="text-slate-400">{displayPayments.length} tenants shown</p>
             <p className="font-semibold text-slate-700">
               Total Collected: <span className="text-emerald-600">₹{totalAmount.toLocaleString()}</span>

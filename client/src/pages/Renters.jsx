@@ -44,25 +44,22 @@ export default function Renters() {
   const closeModal = () => { setShowModal(false); setEditing(null); };
   const onSuccess = () => { closeModal(); fetchRenters(); };
 
-  const occupiedRooms = new Set(renters.map((r) => r.roomNumber).filter(Boolean));
   const emptyRoomRenters = renters.filter((r) => !r.roomNumber);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-violet-200">
-              👥
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Total</p>
-              <p className="text-2xl font-bold text-slate-800 leading-none">{renters.length} Renters</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-violet-200">
+            👥
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Total</p>
+            <p className="text-2xl font-bold text-slate-800 leading-none">{renters.length} Renters</p>
           </div>
         </div>
-        <button className="btn-primary" onClick={openAdd}>
+        <button className="btn-primary w-full sm:w-auto" onClick={openAdd}>
           ＋ Add New Renter
         </button>
       </div>
@@ -71,7 +68,7 @@ export default function Renters() {
       <div className="card">
         {/* Search */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative flex-1 sm:max-w-sm">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
             <input
               className="input pl-10"
@@ -87,7 +84,56 @@ export default function Renters() {
           )}
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-100">
+        {/* Mobile cards */}
+        <div className="sm:hidden space-y-3">
+          {loading ? (
+            <div className="py-16 text-center">
+              <div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-slate-400 text-sm">Loading renters...</p>
+            </div>
+          ) : renters.length === 0 ? (
+            <div className="py-16 text-center">
+              <div className="text-4xl mb-3">🏘️</div>
+              <p className="text-slate-500 font-semibold">No renters found</p>
+              <p className="text-slate-400 text-sm mt-1">
+                {search ? 'Try a different search term' : 'Add your first renter to get started'}
+              </p>
+            </div>
+          ) : renters.map((r) => (
+            <div key={r._id} className="mobile-card">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                    r.isActive ? 'bg-gradient-to-br from-violet-100 to-indigo-100 text-violet-600' : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    {r.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className={`font-semibold text-sm ${r.isActive ? 'text-slate-800' : 'text-slate-400'}`}>{r.name}</p>
+                    <p className="text-xs text-slate-400">📞 {r.phone}</p>
+                  </div>
+                </div>
+                <button onClick={() => openEdit(r)} className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs min-h-[36px] min-w-[36px]">
+                  ✏️ Edit
+                </button>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                {r.roomNumber ? (
+                  <span className="bg-violet-50 text-violet-700 border border-violet-100 px-2.5 py-1 rounded-xl text-xs font-bold">Room {r.roomNumber}</span>
+                ) : (
+                  <span className="bg-slate-50 text-slate-400 border border-slate-200 px-2.5 py-1 rounded-xl text-xs font-semibold italic">No Room</span>
+                )}
+                <div className="text-right">
+                  <p className="font-bold text-slate-800 text-sm">₹{r.rentAmount.toLocaleString()}<span className="text-slate-400 text-xs font-normal">/mo</span></p>
+                  <p className="text-xs text-amber-600">Due: {r.dueDate}th</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-100">
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
@@ -117,57 +163,49 @@ export default function Renters() {
                     </p>
                   </td>
                 </tr>
-              ) : (
-                renters.map((r) => (
-                  <tr key={r._id} className="table-row">
-                    <td className="table-cell">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                          r.isActive ? 'bg-gradient-to-br from-violet-100 to-indigo-100 text-violet-600' : 'bg-slate-100 text-slate-400'
-                        }`}>
-                          {r.name.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <span className={`font-semibold ${r.isActive ? 'text-slate-800' : 'text-slate-400'}`}>{r.name}</span>
-                          {!r.isActive && (
-                            <span className="ml-2 text-xs bg-red-50 text-red-400 border border-red-100 px-2 py-0.5 rounded-lg font-semibold">
-                              Left {r.leftAt ? new Date(r.leftAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
-                            </span>
-                          )}
-                        </div>
+              ) : renters.map((r) => (
+                <tr key={r._id} className="table-row">
+                  <td className="table-cell">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                        r.isActive ? 'bg-gradient-to-br from-violet-100 to-indigo-100 text-violet-600' : 'bg-slate-100 text-slate-400'
+                      }`}>
+                        {r.name.slice(0, 2).toUpperCase()}
                       </div>
-                    </td>
-                    <td className="table-cell text-slate-500">📞 {r.phone}</td>
-                    <td className="table-cell">
-                      {r.roomNumber ? (
-                        <span className="bg-violet-50 text-violet-700 border border-violet-100 px-3 py-1 rounded-xl text-xs font-bold">
-                          Room {r.roomNumber}
-                        </span>
-                      ) : (
-                        <span className="bg-slate-50 text-slate-400 border border-slate-200 px-3 py-1 rounded-xl text-xs font-semibold italic">
-                          No Room
-                        </span>
-                      )}
-                    </td>
-                    <td className="table-cell">
-                      <span className="font-bold text-slate-800">₹{r.rentAmount.toLocaleString()}</span>
-                      <span className="text-slate-400 text-xs">/mo</span>
-                    </td>
-                    <td className="table-cell">
-                      <span className="bg-amber-50 text-amber-700 border border-amber-100 px-3 py-1 rounded-xl text-xs font-semibold">
-                        {r.dueDate}th of month
-                      </span>
-                    </td>
-                    <td className="table-cell">
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => openEdit(r)} className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100">
-                          ✏️ Edit
-                        </button>
+                      <div>
+                        <span className={`font-semibold ${r.isActive ? 'text-slate-800' : 'text-slate-400'}`}>{r.name}</span>
+                        {!r.isActive && (
+                          <span className="ml-2 text-xs bg-red-50 text-red-400 border border-red-100 px-2 py-0.5 rounded-lg font-semibold">
+                            Left {r.leftAt ? new Date(r.leftAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                          </span>
+                        )}
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+                    </div>
+                  </td>
+                  <td className="table-cell text-slate-500">📞 {r.phone}</td>
+                  <td className="table-cell">
+                    {r.roomNumber ? (
+                      <span className="bg-violet-50 text-violet-700 border border-violet-100 px-3 py-1 rounded-xl text-xs font-bold">Room {r.roomNumber}</span>
+                    ) : (
+                      <span className="bg-slate-50 text-slate-400 border border-slate-200 px-3 py-1 rounded-xl text-xs font-semibold italic">No Room</span>
+                    )}
+                  </td>
+                  <td className="table-cell">
+                    <span className="font-bold text-slate-800">₹{r.rentAmount.toLocaleString()}</span>
+                    <span className="text-slate-400 text-xs">/mo</span>
+                  </td>
+                  <td className="table-cell">
+                    <span className="bg-amber-50 text-amber-700 border border-amber-100 px-3 py-1 rounded-xl text-xs font-semibold">
+                      {r.dueDate}th of month
+                    </span>
+                  </td>
+                  <td className="table-cell">
+                    <button onClick={() => openEdit(r)} className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100">
+                      ✏️ Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -205,7 +243,7 @@ export default function Renters() {
                 </div>
                 <button
                   onClick={() => openEdit(r)}
-                  className="text-xs bg-white border border-amber-200 text-amber-600 hover:bg-amber-100 px-3 py-1.5 rounded-xl font-semibold transition-all"
+                  className="text-xs bg-white border border-amber-200 text-amber-600 hover:bg-amber-100 px-3 py-2 rounded-xl font-semibold transition-all min-h-[36px]"
                 >
                   Assign Room
                 </button>
