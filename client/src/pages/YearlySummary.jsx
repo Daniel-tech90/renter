@@ -13,7 +13,7 @@ function MonthGrid({ renterId, year }) {
     paymentService.getByRenter(renterId)
       .then(({ data }) => {
         const map = {};
-        data.forEach(p => { map[p.month] = p.status; });
+        data.forEach(p => { map[p.month] = p; });
         setMonthData(map);
       })
       .finally(() => setLoading(false));
@@ -22,26 +22,50 @@ function MonthGrid({ renterId, year }) {
   if (loading) return <div className="w-4 h-4 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" />;
 
   return (
-    <div className="flex gap-1.5 flex-wrap">
+    <div className="flex gap-2 flex-wrap">
       {MONTH_NAMES.map((name, i) => {
         const month = `${year}-${String(i + 1).padStart(2, '0')}`;
-        const status = monthData[month];
-        let bg, text, ring;
+        const record = monthData[month];
+        const status = record?.status;
+
+        let bg, text, border, icon, shadow, tooltip;
         if (!status || status === 'Room Closed') {
-          bg = 'bg-slate-100'; text = 'text-slate-400'; ring = 'ring-slate-200';
+          bg = 'bg-slate-100 hover:bg-slate-200';
+          text = 'text-slate-400';
+          border = 'border-slate-200';
+          icon = '⛔';
+          shadow = '';
+          tooltip = `${name} ${year} — Room Closed`;
         } else if (status === 'Paid') {
-          bg = 'bg-emerald-500'; text = 'text-white'; ring = 'ring-emerald-400';
+          bg = 'bg-emerald-50 hover:bg-emerald-100';
+          text = 'text-emerald-700';
+          border = 'border-emerald-300';
+          icon = '✔';
+          shadow = 'shadow-emerald-100';
+          tooltip = `${name} ${year} — Paid ₹${(record.totalAmount || record.amount || 0).toLocaleString('en-IN')}`;
         } else {
-          bg = 'bg-red-500'; text = 'text-white'; ring = 'ring-red-400';
+          bg = 'bg-red-50 hover:bg-red-100';
+          text = 'text-red-600';
+          border = 'border-red-300';
+          icon = '⚠️';
+          shadow = 'shadow-red-100';
+          tooltip = `${name} ${year} — Due ₹${(record.totalAmount || record.amount || 0).toLocaleString('en-IN')}`;
         }
+
         return (
           <div
             key={month}
-            title={`${name} ${year} — ${status || 'Room Closed'}`}
-            className={`w-8 h-8 rounded-lg ${bg} ${text} ring-1 ${ring} flex flex-col items-center justify-center cursor-default shadow-sm`}
+            title={tooltip}
+            className={`
+              flex items-center gap-1.5 px-3 py-1.5 rounded-full border
+              ${bg} ${text} ${border} shadow-sm ${shadow}
+              cursor-pointer select-none
+              transition-all duration-200 hover:scale-105 hover:shadow-md
+              text-xs font-bold
+            `}
           >
-            <span className="text-[9px] font-bold leading-none">{name.slice(0, 1)}</span>
-            <span className="text-[8px] leading-none opacity-80">{i + 1}</span>
+            <span className="text-[10px]">{icon}</span>
+            <span>{name}</span>
           </div>
         );
       })}
@@ -183,10 +207,10 @@ export default function YearlySummary() {
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-bold text-slate-800">Tenant-wise Summary — {year}</h3>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 text-xs font-semibold">
-              <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded-md bg-emerald-500 shadow-sm inline-block"></span><span className="text-emerald-700">Paid</span></span>
-              <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded-md bg-red-500 shadow-sm inline-block"></span><span className="text-red-600">Due</span></span>
-              <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded-md bg-slate-100 ring-1 ring-slate-200 inline-block"></span><span className="text-slate-500">Closed</span></span>
+            <div className="flex items-center gap-2 text-xs font-bold">
+              <span className="flex items-center gap-1 bg-emerald-50 border border-emerald-300 text-emerald-700 px-2.5 py-1 rounded-full">✔ Paid</span>
+              <span className="flex items-center gap-1 bg-red-50 border border-red-300 text-red-600 px-2.5 py-1 rounded-full">⚠️ Due</span>
+              <span className="flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-400 px-2.5 py-1 rounded-full">⛔ Closed</span>
             </div>
             <span className="text-xs bg-slate-100 text-slate-500 font-semibold px-3 py-1.5 rounded-xl">{summary.length} tenants</span>
           </div>
