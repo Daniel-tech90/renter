@@ -14,7 +14,8 @@ export default function Payments() {
   const [viewScreenshot, setViewScreenshot] = useState(null); // url to view
   const [uploading, setUploading] = useState(null); // paymentId being uploaded
 
-  const [sending, setSending] = useState(null); // paymentId being messaged
+  const [sending, setSending] = useState(null);
+  const [generatingBill, setGeneratingBill] = useState(null);
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
@@ -34,6 +35,25 @@ export default function Payments() {
   const openEdit = (p) => { setEditing(p); setShowModal(true); };
   const closeModal = () => { setShowModal(false); setEditing(null); };
   const onSuccess = () => { closeModal(); fetchPayments(); };
+  const downloadBill = async (id) => {
+    setGeneratingBill(id);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/payments/${id}/bill`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Failed');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `bill-${id}.pdf`; a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Bill downloaded!');
+    } catch {
+      toast.error('Failed to generate bill');
+    } finally {
+      setGeneratingBill(null);
+    }
+  };
+
   const downloadReceipt = async (id) => {
     try {
       const token = localStorage.getItem('token');
@@ -184,7 +204,7 @@ export default function Payments() {
                 <th className="table-header text-left">Month</th>
                 <th className="table-header text-left">Amount</th>
                 <th className="table-header text-left">Status</th>
-                <th className="table-header text-left">Screenshot</th>
+                <th className="table-header text-left">Bill</th>
                 <th className="table-header text-left">Actions</th>
               </tr>
             </thead>
@@ -223,29 +243,15 @@ export default function Payments() {
                     <td className="table-cell font-bold text-slate-800">₹{p.amount.toLocaleString()}</td>
                     <td className="table-cell">{statusBadge(p.status)}</td>
 
-                    {/* Screenshot Column */}
+                    {/* Bill Column */}
                     <td className="table-cell">
-                      {p.screenshotUrl ? (
-                        <button
-                          onClick={() => setViewScreenshot(`http://localhost:5000${p.screenshotUrl}`)}
-                          className="btn-ghost bg-blue-50 text-blue-600 hover:bg-blue-100"
-                        >
-                          🖼️ View
-                        </button>
-                      ) : p.status === 'Pending' ? (
-                        <label className={`btn-ghost bg-slate-50 text-slate-500 hover:bg-slate-100 cursor-pointer ${uploading === p._id ? 'opacity-50' : ''}`}>
-                          {uploading === p._id ? '⏳ Uploading...' : '📤 Upload'}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={uploading === p._id}
-                            onChange={(e) => handleScreenshotUpload(p._id, e.target.files[0])}
-                          />
-                        </label>
-                      ) : (
-                        <span className="text-slate-300 text-xs">—</span>
-                      )}
+                      <button
+                        onClick={() => downloadBill(p._id)}
+                        disabled={generatingBill === p._id}
+                        className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100 disabled:opacity-50"
+                      >
+                        {generatingBill === p._id ? '⏳' : '🧾'} {generatingBill === p._id ? 'Generating...' : 'Generate Bill'}
+                      </button>
                     </td>
 
                     {/* Actions Column */}

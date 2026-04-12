@@ -7,7 +7,6 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Renters from './pages/Renters';
 import Payments from './pages/Payments';
-import Billing from './pages/Billing';
 import History from './pages/History';
 import TenantDetails from './pages/TenantDetails';
 import RenterDashboard from './pages/RenterDashboard';
@@ -25,7 +24,6 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="renters" element={<Renters />} />
             <Route path="payments" element={<Payments />} />
-            <Route path="billing" element={<Billing />} />
             <Route path="history" element={<History />} />
             <Route path="tenant/:id" element={<TenantDetails />} />
           </Route>

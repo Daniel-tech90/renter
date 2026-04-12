@@ -6,7 +6,6 @@ const links = [
   { to: '/', label: 'Dashboard', icon: '📊', desc: 'Overview & stats' },
   { to: '/renters', label: 'Renters', icon: '👥', desc: 'Manage tenants' },
   { to: '/payments', label: 'Payments', icon: '💰', desc: 'Track payments' },
-  { to: '/billing', label: 'Billing', icon: '🧾', desc: 'Bills & receipts' },
   { to: '/history', label: 'History', icon: '🕓', desc: 'Left renters & payments' },
 ];
 

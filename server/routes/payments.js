@@ -3,7 +3,7 @@ const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const {
   getAll, getByRenter, create, update,
-  generateReceipt, submitScreenshot, approvePayment, rejectPayment, sendMessage
+  generateReceipt, generateBill, submitScreenshot, approvePayment, rejectPayment, sendMessage
 } = require('../controllers/paymentController');
 
 router.use(auth);
@@ -16,5 +16,6 @@ router.post('/:id/approve', approvePayment);
 router.post('/:id/reject', rejectPayment);
 router.post('/:id/send-message', sendMessage);
 router.get('/:id/receipt', generateReceipt);
+router.get('/:id/bill', generateBill);
 
 module.exports = router;

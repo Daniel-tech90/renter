@@ -167,6 +167,75 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
+exports.generateBill = async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.id).populate('renterId');
+    if (!payment) return res.status(404).json({ message: 'Payment not found' });
+    const r = payment.renterId;
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=bill-${payment._id}.pdf`);
+    doc.pipe(res);
+
+    // Header
+    doc.rect(0, 0, 595, 100).fill('#4F46E5');
+    doc.fillColor('white').fontSize(24).font('Helvetica-Bold').text('RENT BILL / INVOICE', 50, 28, { align: 'center' });
+    doc.fontSize(10).font('Helvetica').text('Ramishwar Sahu Rental Portal', 50, 62, { align: 'center' });
+
+    // Meta
+    doc.fillColor('#475569').fontSize(9).font('Helvetica')
+      .text(`Bill ID   : ${payment._id}`, 50, 118)
+      .text(`Month     : ${payment.month}`, 50, 132)
+      .text(`Generated : ${new Date().toDateString()}`, 50, 146);
+
+    const statusColor = payment.status === 'Paid' ? '#16a34a' : '#dc2626';
+    doc.rect(400, 115, 145, 36).fill(payment.status === 'Paid' ? '#f0fdf4' : '#fef2f2').stroke(payment.status === 'Paid' ? '#bbf7d0' : '#fecaca');
+    doc.fillColor(statusColor).fontSize(13).font('Helvetica-Bold').text(payment.status.toUpperCase(), 400, 126, { width: 145, align: 'center' });
+
+    doc.moveTo(50, 165).lineTo(545, 165).strokeColor('#e2e8f0').lineWidth(1).stroke();
+
+    // Tenant
+    doc.fillColor('#4F46E5').fontSize(11).font('Helvetica-Bold').text('TENANT DETAILS', 50, 178);
+    let y = 198;
+    [['Name', r.name], ['Phone', r.phone], ['Room', `Room ${r.roomNumber}`], ['Monthly Rent', `\u20b9${r.rentAmount?.toLocaleString()}`]].forEach(([l, v]) => {
+      doc.fillColor('#64748b').fontSize(9).font('Helvetica').text(l, 50, y);
+      doc.fillColor('#1e293b').fontSize(9).font('Helvetica-Bold').text(v, 200, y);
+      y += 16;
+    });
+
+    doc.moveTo(50, y + 8).lineTo(545, y + 8).strokeColor('#e2e8f0').lineWidth(1).stroke();
+
+    // Bill Breakdown
+    doc.fillColor('#4F46E5').fontSize(11).font('Helvetica-Bold').text('BILL BREAKDOWN', 50, y + 20);
+    y += 40;
+    [['Rent Amount', `\u20b9${payment.amount.toLocaleString()}`],
+     ['Payment Date', payment.paymentDate ? new Date(payment.paymentDate).toDateString() : 'Not paid yet'],
+     ['Status', payment.status],
+    ].forEach(([l, v]) => {
+      doc.fillColor('#64748b').fontSize(9).font('Helvetica').text(l, 50, y);
+      doc.fillColor('#1e293b').fontSize(9).font('Helvetica-Bold').text(v, 200, y);
+      y += 16;
+    });
+
+    // Total Box
+    y += 15;
+    doc.rect(50, y, 495, 48).fill('#EEF2FF').stroke('#C7D2FE');
+    doc.fillColor('#4338CA').fontSize(15).font('Helvetica-Bold')
+      .text(`TOTAL AMOUNT : \u20b9${payment.amount.toLocaleString()}`, 50, y + 15, { align: 'center', width: 495 });
+
+    // Footer
+    doc.rect(0, 780, 595, 62).fill('#f8fafc');
+    doc.moveTo(0, 780).lineTo(595, 780).strokeColor('#e2e8f0').lineWidth(1).stroke();
+    doc.fillColor('#94a3b8').fontSize(8).font('Helvetica')
+      .text('This is a computer-generated bill.', 50, 792, { align: 'center', width: 495 })
+      .text(`Ramishwar Sahu Rental Portal  |  Generated on ${new Date().toLocaleString('en-IN')}`, 50, 808, { align: 'center', width: 495 });
+
+    doc.end();
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.generateReceipt = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id).populate('renterId');
