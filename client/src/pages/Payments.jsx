@@ -245,22 +245,43 @@ export default function Payments() {
 
   return (
     <div className="space-y-6">
-      {/* Summary Strip — horizontal scroll on mobile, grid on desktop */}
-      <div className="flex gap-3 overflow-x-auto pb-1 sm:pb-0 sm:grid sm:grid-cols-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+      {/* Summary Strip */}
+      {/* Mobile: horizontal scroll row | Desktop: 4-col grid */}
+      <div className="hidden sm:grid sm:grid-cols-4 gap-4">
         {[
           { label: 'Total', value: payments.length, icon: '📋', color: 'bg-slate-50 border-slate-200 text-slate-700' },
           { label: 'Paid', value: paidCount, icon: '✅', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-          { label: 'Review', value: reviewCount, icon: '📸', color: 'bg-blue-50 border-blue-200 text-blue-700' },
+          { label: 'Under Review', value: reviewCount, icon: '📸', color: 'bg-blue-50 border-blue-200 text-blue-700' },
           { label: 'Pending', value: pendingCount, icon: '⏳', color: 'bg-amber-50 border-amber-200 text-amber-700' },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-2xl border ${color} font-semibold min-w-[120px] sm:min-w-0`}>
-            <span className="text-xl">{icon}</span>
+          <div key={label} className={`flex items-center gap-3 px-5 py-4 rounded-2xl border ${color} font-semibold`}>
+            <span className="text-2xl">{icon}</span>
             <div>
-              <p className="text-xs opacity-70 font-medium whitespace-nowrap">{label}</p>
-              <p className="text-lg font-bold">{value}</p>
+              <p className="text-xs opacity-70 font-medium">{label}</p>
+              <p className="text-xl font-bold">{value}</p>
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Mobile horizontal scroll — uses inline style to bypass overflow-hidden on parent */}
+      <div className="sm:hidden" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginLeft: '-1rem', marginRight: '-1rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+        <div style={{ display: 'flex', gap: '12px', paddingBottom: '4px', width: 'max-content' }}>
+          {[
+            { label: 'Total', value: payments.length, icon: '📋', bg: '#f8fafc', border: '#e2e8f0', color: '#334155' },
+            { label: 'Paid', value: paidCount, icon: '✅', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d' },
+            { label: 'Review', value: reviewCount, icon: '📸', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
+            { label: 'Pending', value: pendingCount, icon: '⏳', bg: '#fffbeb', border: '#fde68a', color: '#b45309' },
+          ].map(({ label, value, icon, bg, border, color }) => (
+            <div key={label} style={{ background: bg, border: `1px solid ${border}`, color, borderRadius: '16px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px', minWidth: '110px', flexShrink: 0 }}>
+              <span style={{ fontSize: '20px' }}>{icon}</span>
+              <div>
+                <p style={{ fontSize: '11px', fontWeight: 600, opacity: 0.7, whiteSpace: 'nowrap' }}>{label}</p>
+                <p style={{ fontSize: '20px', fontWeight: 700, lineHeight: 1.2 }}>{value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Under Review Alert */}
