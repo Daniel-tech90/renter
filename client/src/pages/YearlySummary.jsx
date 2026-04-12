@@ -4,8 +4,25 @@ import { paymentService } from '../services';
 import Modal from '../components/Modal';
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CURRENT_MONTH = new Date().getMonth(); // 0-indexed
+const CURRENT_YEAR  = new Date().getFullYear();
 
-function MonthGrid({ renterId, year }) {
+function getChipStyle(status, isCurrent) {
+  const base = { borderRadius: '999px', padding: '6px 12px', fontSize: '11px', fontWeight: 700,
+    display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0,
+    border: '1.5px solid', cursor: 'default', whiteSpace: 'nowrap',
+    boxShadow: isCurrent ? '0 0 0 2px #6366f1' : undefined,
+    transition: 'transform 0.15s',
+  };
+  if (!status || status === 'Room Closed')
+    return { ...base, background: '#f1f5f9', color: '#94a3b8', borderColor: '#e2e8f0' };
+  if (status === 'Paid')
+    return { ...base, background: '#f0fdf4', color: '#15803d', borderColor: '#86efac' };
+  // Pending / Due
+  return { ...base, background: '#fff7ed', color: '#c2410c', borderColor: '#fdba74' };
+}
+
+function MonthChips({ renterId, year }) {
   const [monthData, setMonthData] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -22,53 +39,31 @@ function MonthGrid({ renterId, year }) {
   if (loading) return <div className="w-4 h-4 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" />;
 
   return (
-    <div className="flex gap-2 flex-wrap">
-      {MONTH_NAMES.map((name, i) => {
-        const month = `${year}-${String(i + 1).padStart(2, '0')}`;
-        const record = monthData[month];
-        const status = record?.status;
+    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory',
+      msOverflowStyle: 'none', scrollbarWidth: 'none' }}
+      className="[&::-webkit-scrollbar]:hidden"
+    >
+      <div style={{ display: 'flex', gap: '6px', paddingBottom: '2px', width: 'max-content' }}>
+        {MONTH_NAMES.map((name, i) => {
+          const month = `${year}-${String(i + 1).padStart(2, '0')}`;
+          const record = monthData[month];
+          const status = record?.status;
+          const isCurrent = year === CURRENT_YEAR && i === CURRENT_MONTH;
+          const icon = (!status || status === 'Room Closed') ? '⛔' : status === 'Paid' ? '✅' : '⚠️';
+          const amount = record ? `₹${(record.totalAmount || record.amount || 0).toLocaleString('en-IN')}` : '';
 
-        let bg, text, border, icon, shadow, tooltip;
-        if (!status || status === 'Room Closed') {
-          bg = 'bg-slate-100 hover:bg-slate-200';
-          text = 'text-slate-400';
-          border = 'border-slate-200';
-          icon = '⛔';
-          shadow = '';
-          tooltip = `${name} ${year} — Room Closed`;
-        } else if (status === 'Paid') {
-          bg = 'bg-emerald-50 hover:bg-emerald-100';
-          text = 'text-emerald-700';
-          border = 'border-emerald-300';
-          icon = '✔';
-          shadow = 'shadow-emerald-100';
-          tooltip = `${name} ${year} — Paid ₹${(record.totalAmount || record.amount || 0).toLocaleString('en-IN')}`;
-        } else {
-          bg = 'bg-red-50 hover:bg-red-100';
-          text = 'text-red-600';
-          border = 'border-red-300';
-          icon = '⚠️';
-          shadow = 'shadow-red-100';
-          tooltip = `${name} ${year} — Due ₹${(record.totalAmount || record.amount || 0).toLocaleString('en-IN')}`;
-        }
-
-        return (
-          <div
-            key={month}
-            title={tooltip}
-            className={`
-              flex items-center gap-1.5 px-3 py-1.5 rounded-full border
-              ${bg} ${text} ${border} shadow-sm ${shadow}
-              cursor-pointer select-none
-              transition-all duration-200 hover:scale-105 hover:shadow-md
-              text-xs font-bold
-            `}
-          >
-            <span className="text-[10px]">{icon}</span>
-            <span>{name}</span>
-          </div>
-        );
-      })}
+          return (
+            <div
+              key={month}
+              title={`${name} ${year}${amount ? ' — ' + amount : ''}`}
+              style={{ ...getChipStyle(status, isCurrent), scrollSnapAlign: 'start' }}
+            >
+              <span style={{ fontSize: '10px' }}>{icon}</span>
+              <span>{name}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -85,7 +80,7 @@ function TenantHistoryModal({ renterId, renterName, onClose }) {
   }, [renterId]);
 
   const totalPaid = payments.filter(p => p.status === 'Paid').reduce((s, p) => s + (p.totalAmount || p.amount), 0);
-  const totalDue = payments.filter(p => p.status === 'Pending').reduce((s, p) => s + (p.totalAmount || p.amount), 0);
+  const totalDue  = payments.filter(p => p.status === 'Pending').reduce((s, p) => s + (p.totalAmount || p.amount), 0);
 
   return (
     <Modal title={`📋 ${renterName} — Payment History`} onClose={onClose}>
@@ -153,9 +148,9 @@ function TenantHistoryModal({ renterId, renterName, onClose }) {
 }
 
 export default function YearlySummary() {
-  const [summary, setSummary] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [summary, setSummary]       = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [year, setYear]             = useState(CURRENT_YEAR);
   const [tenantHistory, setTenantHistory] = useState(null);
 
   useEffect(() => {
@@ -171,26 +166,26 @@ export default function YearlySummary() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-xl shadow-lg">📅</div>
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-xl shadow-lg flex-shrink-0">📅</div>
           <div>
             <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Annual</p>
-            <p className="text-2xl font-bold text-slate-800">Yearly Summary</p>
+            <p className="text-xl sm:text-2xl font-bold text-slate-800">Yearly Summary</p>
           </div>
         </div>
-        <select className="input max-w-[140px]" value={year} onChange={(e) => setYear(Number(e.target.value))}>
+        <select className="input max-w-[120px] sm:max-w-[140px]" value={year} onChange={(e) => setYear(Number(e.target.value))}>
           {[2023, 2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
 
-      {/* Top Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* Top Stats — horizontal scroll on mobile */}
+      <div className="hidden sm:grid sm:grid-cols-4 gap-4">
         {[
-          { label: 'Total Tenants', value: summary.length, icon: '👥', color: 'bg-slate-50 border-slate-200 text-slate-700' },
-          { label: 'Total Collected', value: `₹${totalCollected.toLocaleString('en-IN')}`, icon: '💰', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-          { label: 'Fully Paid', value: summary.filter(t => t.monthsPaid === 12).length, icon: '✅', color: 'bg-green-50 border-green-200 text-green-700' },
-          { label: 'Has Dues', value: summary.filter(t => t.monthsPending > 0).length, icon: '⏳', color: 'bg-amber-50 border-amber-200 text-amber-700' },
+          { label: 'Total Tenants',   value: summary.length,                                    icon: '👥', color: 'bg-slate-50 border-slate-200 text-slate-700' },
+          { label: 'Total Collected', value: `₹${totalCollected.toLocaleString('en-IN')}`,      icon: '💰', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+          { label: 'Fully Paid',      value: summary.filter(t => t.monthsPaid === 12).length,   icon: '✅', color: 'bg-green-50 border-green-200 text-green-700' },
+          { label: 'Has Dues',        value: summary.filter(t => t.monthsPending > 0).length,   icon: '⏳', color: 'bg-amber-50 border-amber-200 text-amber-700' },
         ].map(({ label, value, icon, color }) => (
           <div key={label} className={`flex items-center gap-3 px-5 py-4 rounded-2xl border ${color} font-semibold`}>
             <span className="text-2xl">{icon}</span>
@@ -202,18 +197,104 @@ export default function YearlySummary() {
         ))}
       </div>
 
-      {/* Table */}
-      <div className="card">
+      {/* Mobile stats — horizontal scroll */}
+      <div className="sm:hidden" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginLeft: '-1rem', marginRight: '-1rem', paddingLeft: '1rem', paddingRight: '1rem', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+        <div style={{ display: 'flex', gap: '10px', paddingBottom: '4px', width: 'max-content' }}>
+          {[
+            { label: 'Tenants',   value: summary.length,                                    icon: '👥', bg: '#f8fafc', border: '#e2e8f0', color: '#334155' },
+            { label: 'Collected', value: `₹${totalCollected.toLocaleString('en-IN')}`,      icon: '💰', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d' },
+            { label: 'Fully Paid',value: summary.filter(t => t.monthsPaid === 12).length,   icon: '✅', bg: '#f0fdf4', border: '#86efac', color: '#166534' },
+            { label: 'Has Dues',  value: summary.filter(t => t.monthsPending > 0).length,   icon: '⏳', bg: '#fffbeb', border: '#fde68a', color: '#b45309' },
+          ].map(({ label, value, icon, bg, border, color }) => (
+            <div key={label} style={{ background: bg, border: `1px solid ${border}`, color, borderRadius: '16px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', minWidth: '110px', flexShrink: 0 }}>
+              <span style={{ fontSize: '18px' }}>{icon}</span>
+              <div>
+                <p style={{ fontSize: '10px', fontWeight: 600, opacity: 0.7, whiteSpace: 'nowrap' }}>{label}</p>
+                <p style={{ fontSize: '16px', fontWeight: 700, lineHeight: 1.2 }}>{value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs text-slate-400 font-semibold mr-1">Legend:</span>
+        <span className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-300 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-bold">✅ Paid</span>
+        <span className="inline-flex items-center gap-1 bg-orange-50 border border-orange-300 text-orange-600 px-2.5 py-1 rounded-full text-xs font-bold">⚠️ Due</span>
+        <span className="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-400 px-2.5 py-1 rounded-full text-xs font-bold">⛔ Closed</span>
+        <span className="inline-flex items-center gap-1 bg-white border-2 border-indigo-400 text-indigo-600 px-2.5 py-1 rounded-full text-xs font-bold">◉ Current Month</span>
+      </div>
+
+      {/* Mobile: tenant cards */}
+      <div className="lg:hidden space-y-4">
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin" />
+          </div>
+        ) : summary.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="text-4xl mb-3">📭</div>
+            <p className="text-slate-500 font-semibold">No data for {year}</p>
+          </div>
+        ) : summary.map((t) => (
+          <div key={t.renter._id} className="card space-y-3">
+            {/* Tenant header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-xs font-bold text-violet-600 flex-shrink-0">
+                  {t.renter.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <button
+                    onClick={() => setTenantHistory({ renterId: t.renter._id, renterName: t.renter.name })}
+                    className="font-semibold text-slate-800 hover:text-violet-600 text-sm text-left"
+                  >
+                    {t.renter.name}
+                  </button>
+                  <p className="text-xs text-slate-400">
+                    <span className="bg-violet-50 text-violet-700 border border-violet-100 px-1.5 py-0.5 rounded text-xs font-bold">Room {t.renter.roomNumber}</span>
+                  </p>
+                </div>
+              </div>
+              <span className={`px-2.5 py-1 rounded-xl text-xs font-bold ${
+                t.monthsPending === 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-500 border border-red-100'
+              }`}>
+                {t.monthsPending === 0 ? '✅ All Paid' : `${t.monthsPending} due`}
+              </span>
+            </div>
+
+            {/* Stats row */}
+            <div className="flex items-center gap-4 text-sm">
+              <div>
+                <p className="text-xs text-slate-400">Paid</p>
+                <p className="font-bold text-emerald-600">{t.monthsPaid}/12</p>
+              </div>
+              <div className="flex-1">
+                <div className="w-full bg-slate-100 rounded-full h-2">
+                  <div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${(t.monthsPaid / 12) * 100}%` }} />
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-400">Collected</p>
+                <p className="font-bold text-slate-800">₹{t.totalPaid.toLocaleString('en-IN')}</p>
+              </div>
+            </div>
+
+            {/* Month chips — horizontal scroll with snap */}
+            <div>
+              <p className="text-xs text-slate-400 font-semibold mb-2">Month Status</p>
+              <MonthChips renterId={t.renter._id} year={year} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden lg:block card">
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-bold text-slate-800">Tenant-wise Summary — {year}</h3>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-xs font-bold">
-              <span className="flex items-center gap-1 bg-emerald-50 border border-emerald-300 text-emerald-700 px-2.5 py-1 rounded-full">✔ Paid</span>
-              <span className="flex items-center gap-1 bg-red-50 border border-red-300 text-red-600 px-2.5 py-1 rounded-full">⚠️ Due</span>
-              <span className="flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-400 px-2.5 py-1 rounded-full">⛔ Closed</span>
-            </div>
-            <span className="text-xs bg-slate-100 text-slate-500 font-semibold px-3 py-1.5 rounded-xl">{summary.length} tenants</span>
-          </div>
+          <span className="text-xs bg-slate-100 text-slate-500 font-semibold px-3 py-1.5 rounded-xl">{summary.length} tenants</span>
         </div>
 
         {loading ? (
@@ -277,7 +358,7 @@ export default function YearlySummary() {
                       </span>
                     </td>
                     <td className="table-cell font-bold text-emerald-700">₹{t.totalPaid.toLocaleString('en-IN')}</td>
-                    <td className="table-cell"><MonthGrid renterId={t.renter._id} year={year} /></td>
+                    <td className="table-cell"><MonthChips renterId={t.renter._id} year={year} /></td>
                   </tr>
                 ))}
               </tbody>
