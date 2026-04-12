@@ -122,10 +122,19 @@ export default function Renters() {
                   <tr key={r._id} className="table-row">
                     <td className="table-cell">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-sm font-bold text-violet-600 flex-shrink-0">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                          r.isActive ? 'bg-gradient-to-br from-violet-100 to-indigo-100 text-violet-600' : 'bg-slate-100 text-slate-400'
+                        }`}>
                           {r.name.slice(0, 2).toUpperCase()}
                         </div>
-                        <span className="font-semibold text-slate-800">{r.name}</span>
+                        <div>
+                          <span className={`font-semibold ${r.isActive ? 'text-slate-800' : 'text-slate-400'}`}>{r.name}</span>
+                          {!r.isActive && (
+                            <span className="ml-2 text-xs bg-red-50 text-red-400 border border-red-100 px-2 py-0.5 rounded-lg font-semibold">
+                              Left {r.leftAt ? new Date(r.leftAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="table-cell text-slate-500">📞 {r.phone}</td>
@@ -151,17 +160,8 @@ export default function Renters() {
                     </td>
                     <td className="table-cell">
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => openEdit(r)}
-                          className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
-                        >
+                        <button onClick={() => openEdit(r)} className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100">
                           ✏️ Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(r._id, r.name)}
-                          className="btn-ghost bg-red-50 text-red-500 hover:bg-red-100"
-                        >
-                          🗑️ Delete
                         </button>
                       </div>
                     </td>

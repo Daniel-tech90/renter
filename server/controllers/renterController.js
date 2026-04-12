@@ -5,7 +5,7 @@ const { sendWhatsApp } = require('../services/whatsappService');
 exports.getAll = async (req, res) => {
   try {
     const { search } = req.query;
-    const filter = { isActive: true, adminId: req.adminId };
+    const filter = { adminId: req.adminId };
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -13,7 +13,7 @@ exports.getAll = async (req, res) => {
         { phone: { $regex: search, $options: 'i' } },
       ];
     }
-    const renters = await Renter.find(filter).sort({ createdAt: -1 });
+    const renters = await Renter.find(filter).sort({ isActive: -1, createdAt: -1 });
     res.json(renters);
   } catch (err) {
     res.status(500).json({ message: err.message });
