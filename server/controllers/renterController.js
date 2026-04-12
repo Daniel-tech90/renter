@@ -67,6 +67,21 @@ exports.remove = async (req, res) => {
   }
 };
 
+exports.uploadGovtId = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'File is required' });
+    const renter = await Renter.findOneAndUpdate(
+      { _id: req.params.id, adminId: req.adminId },
+      { govtIdDocUrl: `/uploads/${req.file.filename}` },
+      { new: true }
+    );
+    if (!renter) return res.status(404).json({ message: 'Renter not found' });
+    res.json({ govtIdDocUrl: renter.govtIdDocUrl });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.markLeft = async (req, res) => {
   try {
     const renter = await Renter.findOne({ _id: req.params.id, adminId: req.adminId });

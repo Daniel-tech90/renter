@@ -11,6 +11,11 @@ export const renterService = {
   update: (id, data) => api.put(`/renters/${id}`, data),
   remove: (id) => api.delete(`/renters/${id}`),
   markLeft: (id) => api.put(`/renters/${id}/mark-left`),
+  uploadGovtId: (id, file) => {
+    const form = new FormData();
+    form.append('govtId', file);
+    return api.post(`/renters/${id}/upload-id`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
 };
 
 export const paymentService = {

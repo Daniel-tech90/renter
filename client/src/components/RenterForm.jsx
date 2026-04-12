@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { renterService } from '../services';
 
-const EMPTY = { name: '', email: '', password: '', phone: '', roomNumber: '', rentAmount: '', dueDate: '' };
+const EMPTY = { name: '', email: '', password: '', phone: '', roomNumber: '', rentAmount: '', dueDate: '', govtIdType: '', govtIdNumber: '' };
 
 export default function RenterForm({ renter, onSuccess, onClose }) {
   const [form, setForm] = useState(EMPTY);
@@ -10,6 +10,7 @@ export default function RenterForm({ renter, onSuccess, onClose }) {
   const [leaving, setLeaving] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [govtIdFile, setGovtIdFile] = useState(null);
 
   useEffect(() => {
     if (renter) setForm({ ...renter, password: '' });
@@ -37,7 +38,17 @@ export default function RenterForm({ renter, onSuccess, onClose }) {
     try {
       const payload = { ...form };
       if (renter && !payload.password) delete payload.password;
-      renter ? await renterService.update(renter._id, payload) : await renterService.create(payload);
+      let saved;
+      if (renter) {
+        const { data } = await renterService.update(renter._id, payload);
+        saved = data;
+      } else {
+        const { data } = await renterService.create(payload);
+        saved = data;
+      }
+      if (govtIdFile && saved?._id) {
+        await renterService.uploadGovtId(saved._id, govtIdFile);
+      }
       toast.success(renter ? 'Renter updated!' : 'Renter added!');
       onSuccess();
     } catch (err) {
@@ -124,6 +135,38 @@ export default function RenterForm({ renter, onSuccess, onClose }) {
             <input name="dueDate" type="number" className="input pl-10" value={form.dueDate} onChange={set} required placeholder="5" min="1" max="31" />
           </div>
           <p className="text-xs text-slate-400 mt-1">e.g. 5 = due on 5th of every month</p>
+        </div>
+      </div>
+
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+        <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">🪪 Government ID Details</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="input-label">ID Type</label>
+            <select name="govtIdType" className="input" value={form.govtIdType} onChange={set}>
+              <option value="">Select ID Type</option>
+              {['Aadhaar Card', 'PAN Card', 'Voter ID', 'Driving License'].map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="input-label">ID Number</label>
+            <input name="govtIdNumber" className="input" value={form.govtIdNumber} onChange={set} placeholder="Enter ID number" />
+          </div>
+        </div>
+        <div>
+          <label className="input-label">Upload ID Document (Image or PDF)</label>
+          <input
+            type="file"
+            accept="image/*,.pdf"
+            onChange={(e) => setGovtIdFile(e.target.files[0])}
+            className="block w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100 cursor-pointer"
+          />
+          {renter?.govtIdDocUrl && !govtIdFile && (
+            <a href={renter.govtIdDocUrl} target="_blank" rel="noreferrer" className="text-xs text-violet-600 hover:underline mt-1 inline-block">📎 View uploaded document</a>
+          )}
+          {govtIdFile && <p className="text-xs text-emerald-600 mt-1">✅ {govtIdFile.name}</p>}
         </div>
       </div>
 
