@@ -24,8 +24,9 @@ export default function TenantDetails() {
 
   if (!data) return null;
 
-  const { renter: r, payments, totalPaid } = data;
-  const totalDue = payments.filter(p => p.status === 'Pending').reduce((sum, p) => sum + p.amount, 0);
+  const { renter: r, payments } = data;
+  const totalPaid = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + (p.totalAmount || p.amount), 0);
+  const totalDue = payments.filter(p => p.status === 'Pending').reduce((sum, p) => sum + (p.totalAmount || p.amount), 0);
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -91,16 +92,22 @@ export default function TenantDetails() {
               <thead className="bg-slate-50">
                 <tr>
                   <th className="table-header text-left">Month</th>
-                  <th className="table-header text-left">Rent Amount</th>
+                  <th className="table-header text-left">Rent</th>
+                  <th className="table-header text-left">Units</th>
+                  <th className="table-header text-left">Elec. Bill</th>
+                  <th className="table-header text-left">Total</th>
                   <th className="table-header text-left">Status</th>
-                  <th className="table-header text-left">Payment Date</th>
+                  <th className="table-header text-left">Paid On</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
                 {payments.map((p) => (
                   <tr key={p._id} className="border-b border-slate-50">
                     <td className="table-cell font-semibold text-slate-700">{p.month}</td>
-                    <td className="table-cell font-bold text-slate-700">₹{p.amount.toLocaleString()}</td>
+                    <td className="table-cell text-slate-700">₹{p.amount.toLocaleString()}</td>
+                    <td className="table-cell text-slate-500">{p.unitsConsumed || 0} u</td>
+                    <td className="table-cell text-slate-600">₹{(p.electricityBill || 0).toLocaleString()}</td>
+                    <td className="table-cell font-bold text-indigo-700">₹{(p.totalAmount || p.amount).toLocaleString()}</td>
                     <td className="table-cell">
                       <span className={`px-2.5 py-1 rounded-xl text-xs font-bold ${
                         p.status === 'Paid' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
