@@ -54,15 +54,18 @@ function TenantHistoryModal({ renterId, renterName, onClose }) {
                 </thead>
                 <tbody className="bg-white">
                   {payments.map((p) => (
-                    <tr key={p._id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                    <tr key={p._id} className={`border-b border-slate-50 ${
+                      p.status === 'Room Closed' ? 'bg-slate-50/80 opacity-60' : 'hover:bg-slate-50/50'
+                    }`}>
                       <td className="table-cell font-semibold text-slate-700">{p.month}</td>
-                      <td className="table-cell text-slate-700">₹{p.amount.toLocaleString('en-IN')}</td>
-                      <td className="table-cell text-slate-500">{p.unitsConsumed || 0} u</td>
-                      <td className="table-cell text-slate-600">₹{(p.electricityBill || 0).toLocaleString('en-IN')}</td>
-                      <td className="table-cell font-bold text-indigo-700">₹{(p.totalAmount || p.amount).toLocaleString('en-IN')}</td>
+                      <td className="table-cell text-slate-700">{p.status === 'Room Closed' ? '—' : `₹${p.amount.toLocaleString('en-IN')}`}</td>
+                      <td className="table-cell text-slate-500">{p.status === 'Room Closed' ? '—' : `${p.unitsConsumed || 0} u`}</td>
+                      <td className="table-cell text-slate-600">{p.status === 'Room Closed' ? '—' : `₹${(p.electricityBill || 0).toLocaleString('en-IN')}`}</td>
+                      <td className="table-cell font-bold text-indigo-700">{p.status === 'Room Closed' ? '—' : `₹${(p.totalAmount || p.amount).toLocaleString('en-IN')}`}</td>
                       <td className="table-cell">
                         <span className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
                           p.status === 'Paid' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                          p.status === 'Room Closed' ? 'bg-slate-100 text-slate-400 border border-slate-200' :
                           p.status === 'Under Review' ? 'bg-yellow-50 text-yellow-600 border border-yellow-100' :
                           'bg-red-50 text-red-500 border border-red-100'
                         }`}>{p.status}</span>

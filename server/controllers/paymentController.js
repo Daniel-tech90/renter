@@ -55,8 +55,41 @@ exports.getByRenter = async (req, res) => {
   try {
     const payments = await Payment.find({ renterId: req.params.renterId, adminId: req.adminId })
       .populate('renterId', 'name roomNumber phone')
-      .sort({ month: -1 });
-    res.json(payments);
+      .sort({ month: 1 });
+
+    if (payments.length === 0) return res.json([]);
+
+    // Build continuous month sequence from first to current month
+    const firstMonth = payments[0].month;
+    const now = new Date();
+    const lastMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    const allMonths = [];
+    let [y, m] = firstMonth.split('-').map(Number);
+    const [ey, em] = lastMonth.split('-').map(Number);
+    while (y < ey || (y === ey && m <= em)) {
+      allMonths.push(`${y}-${String(m).padStart(2, '0')}`);
+      m++; if (m > 12) { m = 1; y++; }
+    }
+
+    const paymentMap = {};
+    payments.forEach(p => { paymentMap[p.month] = p; });
+
+    const result = allMonths.map(month =>
+      paymentMap[month] || {
+        _id: `closed-${month}`,
+        month,
+        amount: 0,
+        electricityBill: 0,
+        unitsConsumed: 0,
+        totalAmount: 0,
+        status: 'Room Closed',
+        paymentDate: null,
+        renterId: payments[0].renterId,
+      }
+    ).reverse();
+
+    res.json(result);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
