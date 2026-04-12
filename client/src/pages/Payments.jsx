@@ -245,19 +245,19 @@ export default function Payments() {
 
   return (
     <div className="space-y-6">
-      {/* Summary Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      {/* Summary Strip — horizontal scroll on mobile, grid on desktop */}
+      <div className="flex gap-3 overflow-x-auto pb-1 sm:pb-0 sm:grid sm:grid-cols-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
         {[
           { label: 'Total', value: payments.length, icon: '📋', color: 'bg-slate-50 border-slate-200 text-slate-700' },
           { label: 'Paid', value: paidCount, icon: '✅', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-          { label: 'Under Review', value: reviewCount, icon: '📸', color: 'bg-blue-50 border-blue-200 text-blue-700' },
+          { label: 'Review', value: reviewCount, icon: '📸', color: 'bg-blue-50 border-blue-200 text-blue-700' },
           { label: 'Pending', value: pendingCount, icon: '⏳', color: 'bg-amber-50 border-amber-200 text-amber-700' },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} className={`flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 rounded-2xl border ${color} font-semibold`}>
-            <span className="text-xl sm:text-2xl">{icon}</span>
+          <div key={label} className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-2xl border ${color} font-semibold min-w-[120px] sm:min-w-0`}>
+            <span className="text-xl">{icon}</span>
             <div>
-              <p className="text-xs opacity-70 font-medium">{label}</p>
-              <p className="text-lg sm:text-xl font-bold">{value}</p>
+              <p className="text-xs opacity-70 font-medium whitespace-nowrap">{label}</p>
+              <p className="text-lg font-bold">{value}</p>
             </div>
           </div>
         ))}
