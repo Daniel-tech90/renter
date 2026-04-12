@@ -9,6 +9,7 @@ import Renters from './pages/Renters';
 import Payments from './pages/Payments';
 import History from './pages/History';
 import TenantDetails from './pages/TenantDetails';
+import YearlySummary from './pages/YearlySummary';
 import RenterDashboard from './pages/RenterDashboard';
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="renters" element={<Renters />} />
             <Route path="payments" element={<Payments />} />
             <Route path="history" element={<History />} />
+            <Route path="yearly-summary" element={<YearlySummary />} />
             <Route path="tenant/:id" element={<TenantDetails />} />
           </Route>
           <Route path="/renter/dashboard" element={<RenterDashboard />} />

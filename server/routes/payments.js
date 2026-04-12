@@ -2,12 +2,13 @@ const router = require('express').Router();
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const {
-  getAll, getByRenter, getLastReading, create, update,
+  getAll, getByRenter, getLastReading, getYearlySummary, create, update,
   generateReceipt, generateBill, submitScreenshot, approvePayment, rejectPayment, sendMessage
 } = require('../controllers/paymentController');
 
 router.use(auth);
 router.get('/', getAll);
+router.get('/yearly-summary', getYearlySummary);
 router.get('/renter/:renterId/last-reading', getLastReading);
 router.get('/renter/:renterId', getByRenter);
 router.post('/', create);

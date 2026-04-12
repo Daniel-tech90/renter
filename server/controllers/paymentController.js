@@ -5,6 +5,40 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
 
+exports.getYearlySummary = async (req, res) => {
+  try {
+    const year = req.query.year || new Date().getFullYear();
+    const allMonths = Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`);
+    const payments = await Payment.find({ adminId: req.adminId, month: { $regex: `^${year}-` } })
+      .populate('renterId', 'name roomNumber phone rentAmount');
+
+    const grouped = {};
+    payments.forEach((p) => {
+      const id = p.renterId?._id?.toString();
+      if (!id) return;
+      if (!grouped[id]) grouped[id] = { renter: p.renterId, payments: [] };
+      grouped[id].payments.push(p);
+    });
+
+    const summary = Object.values(grouped).map(({ renter, payments }) => {
+      const paidMonths = payments.filter(p => p.status === 'Paid').map(p => p.month);
+      const pendingMonths = allMonths.filter(m => !paidMonths.includes(m));
+      const totalPaid = payments.filter(p => p.status === 'Paid').reduce((s, p) => s + (p.totalAmount || p.amount), 0);
+      return {
+        renter,
+        monthsPaid: paidMonths.length,
+        monthsPending: pendingMonths.length,
+        totalPaid,
+        pendingMonths,
+      };
+    });
+
+    res.json(summary);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.getLastReading = async (req, res) => {
   try {
     const last = await Payment.findOne(
