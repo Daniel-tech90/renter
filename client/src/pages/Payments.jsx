@@ -39,9 +39,11 @@ export default function Payments() {
     setGeneratingBill(id);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/payments/${id}/bill`, { headers: { Authorization: `Bearer ${token}` } });
+      const baseURL = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+      const res = await fetch(`${baseURL}/api/payments/${id}/bill`, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error('Failed');
       const blob = await res.blob();
+      if (blob.type !== 'application/pdf') throw new Error('Invalid PDF');
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = `bill-${id}.pdf`; a.click();
@@ -57,16 +59,13 @@ export default function Payments() {
   const downloadReceipt = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/payments/${id}/receipt`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const baseURL = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+      const res = await fetch(`${baseURL}/api/payments/${id}/receipt`, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error('Failed');
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `receipt-${id}.pdf`;
-      a.click();
+      a.href = url; a.download = `receipt-${id}.pdf`; a.click();
       window.URL.revokeObjectURL(url);
     } catch {
       toast.error('Failed to download receipt');
