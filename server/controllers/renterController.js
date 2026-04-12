@@ -50,6 +50,8 @@ exports.update = async (req, res) => {
     if (!renter) return res.status(404).json({ message: 'Renter not found' });
     const { password, ...rest } = req.body;
     Object.assign(renter, rest);
+    // If renter was marked as left, restore them as active
+    if (!renter.isActive) { renter.isActive = true; renter.leftAt = null; }
     if (password && password.trim()) renter.password = password.trim();
     await renter.save();
     res.json(renter);

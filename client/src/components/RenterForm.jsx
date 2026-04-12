@@ -175,8 +175,19 @@ export default function RenterForm({ renter, onSuccess, onClose }) {
         💡 Renter can login at <strong>/renter-login</strong> using their email & password
       </div>
 
-      {/* Mark as Left — only for existing renters */}
-      {renter && (
+      {/* Restore notice for left renters */}
+      {renter && !renter.isActive && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
+          <span className="text-xl">🔄</span>
+          <div>
+            <p className="text-xs font-bold text-amber-700">This tenant is marked as Left</p>
+            <p className="text-xs text-amber-600 mt-0.5">Saving this form will restore them as an active tenant.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Mark as Left — only for active renters */}
+      {renter && renter.isActive && (
         <div className="bg-red-50 border border-red-100 rounded-2xl px-4 py-3">
           {!confirmLeave ? (
             <div className="flex items-center justify-between">
