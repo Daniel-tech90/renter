@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
 export default function History() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('left'); // 'left' | 'paid'
+  const [tab, setTab] = useState('left');
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.get('/history')
@@ -88,7 +90,7 @@ export default function History() {
                 </thead>
                 <tbody className="bg-white">
                   {leftRenters.map((r) => (
-                    <tr key={r._id} className="border-b border-slate-50 hover:bg-red-50/30 transition-colors">
+                    <tr key={r._id} onClick={() => navigate(`/tenant/${r._id}`)} className="border-b border-slate-50 hover:bg-red-50/30 transition-colors cursor-pointer">
                       <td className="table-cell">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-sm font-bold text-slate-500 flex-shrink-0">

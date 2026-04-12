@@ -14,3 +14,15 @@ exports.getHistory = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.getTenantDetails = async (req, res) => {
+  try {
+    const renter = await Renter.findOne({ _id: req.params.id, adminId: req.adminId });
+    if (!renter) return res.status(404).json({ message: 'Tenant not found' });
+    const payments = await Payment.find({ renterId: req.params.id, adminId: req.adminId }).sort({ month: -1 });
+    const totalPaid = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
+    res.json({ renter, payments, totalPaid });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

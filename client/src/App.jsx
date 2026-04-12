@@ -9,6 +9,7 @@ import Renters from './pages/Renters';
 import Payments from './pages/Payments';
 import Billing from './pages/Billing';
 import History from './pages/History';
+import TenantDetails from './pages/TenantDetails';
 import RenterDashboard from './pages/RenterDashboard';
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="payments" element={<Payments />} />
             <Route path="billing" element={<Billing />} />
             <Route path="history" element={<History />} />
+            <Route path="tenant/:id" element={<TenantDetails />} />
           </Route>
           <Route path="/renter/dashboard" element={<RenterDashboard />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
