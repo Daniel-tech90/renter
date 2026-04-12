@@ -33,9 +33,11 @@ exports.getAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { amount, electricityBill = 0 } = req.body;
-    const totalAmount = Number(amount) + Number(electricityBill);
-    const payment = await Payment.create({ ...req.body, electricityBill, totalAmount, adminId: req.adminId });
+    const { amount, prevReading = 0, currReading = 0, ratePerUnit = 0 } = req.body;
+    const unitsConsumed = Math.max(0, Number(currReading) - Number(prevReading));
+    const electricityBill = unitsConsumed * Number(ratePerUnit);
+    const totalAmount = Number(amount) + electricityBill;
+    const payment = await Payment.create({ ...req.body, unitsConsumed, electricityBill, totalAmount, adminId: req.adminId });
     await payment.populate('renterId', 'name roomNumber phone');
     if (payment.status === 'Paid') {
       await sendWhatsApp(
@@ -53,10 +55,12 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const { amount, electricityBill = 0 } = req.body;
-    const totalAmount = Number(amount) + Number(electricityBill);
+    const { amount, prevReading = 0, currReading = 0, ratePerUnit = 0 } = req.body;
+    const unitsConsumed = Math.max(0, Number(currReading) - Number(prevReading));
+    const electricityBill = unitsConsumed * Number(ratePerUnit);
+    const totalAmount = Number(amount) + electricityBill;
     const prev = await Payment.findById(req.params.id);
-    const payment = await Payment.findByIdAndUpdate(req.params.id, { ...req.body, electricityBill, totalAmount }, {
+    const payment = await Payment.findByIdAndUpdate(req.params.id, { ...req.body, unitsConsumed, electricityBill, totalAmount }, {
       new: true, runValidators: true,
     }).populate('renterId', 'name roomNumber phone');
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
@@ -181,40 +185,60 @@ exports.generateBill = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=bill-${payment._id}.pdf`);
     doc.pipe(res);
 
+    const INR = (n) => `\u20b9${Number(n || 0).toLocaleString('en-IN')}`;
+    const div = (y) => doc.moveTo(50, y).lineTo(545, y).strokeColor('#e2e8f0').lineWidth(1).stroke();
+
     // Header
     doc.rect(0, 0, 595, 100).fill('#4F46E5');
-    doc.fillColor('white').fontSize(24).font('Helvetica-Bold').text('RENT BILL / INVOICE', 50, 28, { align: 'center' });
-    doc.fontSize(10).font('Helvetica').text('Ramishwar Sahu Rental Portal', 50, 62, { align: 'center' });
+    doc.fillColor('white').fontSize(22).font('Helvetica-Bold').text('RENT & ELECTRICITY BILL', 50, 25, { align: 'center' });
+    doc.fontSize(10).font('Helvetica').text('Ramishwar Sahu Rental Portal', 50, 60, { align: 'center' });
+
+    // Status badge
+    const isPaid = payment.status === 'Paid';
+    doc.rect(400, 112, 145, 34).fill(isPaid ? '#f0fdf4' : '#fef2f2').stroke(isPaid ? '#bbf7d0' : '#fecaca');
+    doc.fillColor(isPaid ? '#16a34a' : '#dc2626').fontSize(12).font('Helvetica-Bold')
+      .text(payment.status.toUpperCase(), 400, 122, { width: 145, align: 'center' });
 
     // Meta
     doc.fillColor('#475569').fontSize(9).font('Helvetica')
-      .text(`Bill ID   : ${payment._id}`, 50, 118)
-      .text(`Month     : ${payment.month}`, 50, 132)
-      .text(`Generated : ${new Date().toDateString()}`, 50, 146);
+      .text(`Bill ID   : ${payment._id}`, 50, 115)
+      .text(`Month     : ${payment.month}`, 50, 129)
+      .text(`Generated : ${new Date().toDateString()}`, 50, 143);
 
-    const statusColor = payment.status === 'Paid' ? '#16a34a' : '#dc2626';
-    doc.rect(400, 115, 145, 36).fill(payment.status === 'Paid' ? '#f0fdf4' : '#fef2f2').stroke(payment.status === 'Paid' ? '#bbf7d0' : '#fecaca');
-    doc.fillColor(statusColor).fontSize(13).font('Helvetica-Bold').text(payment.status.toUpperCase(), 400, 126, { width: 145, align: 'center' });
-
-    doc.moveTo(50, 165).lineTo(545, 165).strokeColor('#e2e8f0').lineWidth(1).stroke();
+    div(160);
 
     // Tenant
-    doc.fillColor('#4F46E5').fontSize(11).font('Helvetica-Bold').text('TENANT DETAILS', 50, 178);
-    let y = 198;
-    [['Name', r.name], ['Phone', r.phone], ['Room', `Room ${r.roomNumber}`], ['Monthly Rent', `\u20b9${r.rentAmount?.toLocaleString()}`]].forEach(([l, v]) => {
+    doc.fillColor('#4F46E5').fontSize(11).font('Helvetica-Bold').text('TENANT DETAILS', 50, 172);
+    let y = 190;
+    [['Name', r.name], ['Phone', r.phone], ['Room', `Room ${r.roomNumber}`], ['Monthly Rent', INR(r.rentAmount)]]
+      .forEach(([l, v]) => {
+        doc.fillColor('#64748b').fontSize(9).font('Helvetica').text(l, 50, y);
+        doc.fillColor('#1e293b').fontSize(9).font('Helvetica-Bold').text(v, 200, y);
+        y += 16;
+      });
+
+    div(y + 8); y += 22;
+
+    // Electricity
+    doc.fillColor('#4F46E5').fontSize(11).font('Helvetica-Bold').text('ELECTRICITY DETAILS', 50, y); y += 18;
+    [['Previous Reading', `${payment.prevReading || 0} units`],
+     ['Current Reading',  `${payment.currReading || 0} units`],
+     ['Units Consumed',   `${payment.unitsConsumed || 0} units`],
+     ['Rate per Unit',    INR(payment.ratePerUnit)],
+     ['Electricity Bill', INR(payment.electricityBill)],
+    ].forEach(([l, v]) => {
       doc.fillColor('#64748b').fontSize(9).font('Helvetica').text(l, 50, y);
       doc.fillColor('#1e293b').fontSize(9).font('Helvetica-Bold').text(v, 200, y);
       y += 16;
     });
 
-    doc.moveTo(50, y + 8).lineTo(545, y + 8).strokeColor('#e2e8f0').lineWidth(1).stroke();
+    div(y + 8); y += 22;
 
     // Bill Breakdown
-    doc.fillColor('#4F46E5').fontSize(11).font('Helvetica-Bold').text('BILL BREAKDOWN', 50, y + 20);
-    y += 40;
-    [['Rent Amount', `\u20b9${payment.amount.toLocaleString()}`],
+    doc.fillColor('#4F46E5').fontSize(11).font('Helvetica-Bold').text('BILL BREAKDOWN', 50, y); y += 18;
+    [['Rent Amount', INR(payment.amount)],
+     ['Electricity Bill', INR(payment.electricityBill)],
      ['Payment Date', payment.paymentDate ? new Date(payment.paymentDate).toDateString() : 'Not paid yet'],
-     ['Status', payment.status],
     ].forEach(([l, v]) => {
       doc.fillColor('#64748b').fontSize(9).font('Helvetica').text(l, 50, y);
       doc.fillColor('#1e293b').fontSize(9).font('Helvetica-Bold').text(v, 200, y);
@@ -222,10 +246,10 @@ exports.generateBill = async (req, res) => {
     });
 
     // Total Box
-    y += 15;
+    y += 12;
     doc.rect(50, y, 495, 48).fill('#EEF2FF').stroke('#C7D2FE');
     doc.fillColor('#4338CA').fontSize(15).font('Helvetica-Bold')
-      .text(`TOTAL AMOUNT : \u20b9${payment.amount.toLocaleString()}`, 50, y + 15, { align: 'center', width: 495 });
+      .text(`TOTAL AMOUNT : ${INR(payment.totalAmount)}`, 50, y + 15, { align: 'center', width: 495 });
 
     // Footer
     doc.rect(0, 780, 595, 62).fill('#f8fafc');

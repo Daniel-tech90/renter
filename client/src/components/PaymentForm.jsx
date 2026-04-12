@@ -7,10 +7,12 @@ const currentMonth = () => new Date().toISOString().slice(0, 7);
 export default function PaymentForm({ payment, onSuccess, onClose }) {
   const [form, setForm] = useState({
     renterId: '', month: currentMonth(), amount: '',
-    electricityBill: '0', status: 'Pending', paymentDate: '', notes: '',
+    prevReading: '0', currReading: '0', ratePerUnit: '0',
+    status: 'Pending', paymentDate: '', notes: '',
   });
   const [renters, setRenters] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     renterService.getAll().then(({ data }) => setRenters(data));
@@ -19,7 +21,9 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
         renterId: payment.renterId?._id || payment.renterId,
         month: payment.month,
         amount: payment.amount,
-        electricityBill: payment.electricityBill || '0',
+        prevReading: payment.prevReading ?? '0',
+        currReading: payment.currReading ?? '0',
+        ratePerUnit: payment.ratePerUnit ?? '0',
         status: payment.status,
         paymentDate: payment.paymentDate ? payment.paymentDate.slice(0, 10) : '',
         notes: payment.notes || '',
@@ -34,12 +38,19 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
       if (r) updated.amount = r.rentAmount;
     }
     setForm(updated);
+    setError('');
   };
 
-  const total = (Number(form.amount) || 0) + (Number(form.electricityBill) || 0);
+  const prev = Number(form.prevReading) || 0;
+  const curr = Number(form.currReading) || 0;
+  const rate = Number(form.ratePerUnit) || 0;
+  const units = Math.max(0, curr - prev);
+  const elecBill = units * rate;
+  const total = (Number(form.amount) || 0) + elecBill;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (curr < prev) { setError('Current reading must be ≥ previous reading'); return; }
     setLoading(true);
     try {
       const payload = { ...form };
@@ -56,7 +67,7 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Renter Select */}
+      {/* Renter */}
       <div>
         <label className="input-label">Select Tenant</label>
         <div className="relative">
@@ -78,17 +89,41 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
         <div>
           <label className="input-label">Rent Amount (₹)</label>
           <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base">💰</span>
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2">💰</span>
             <input name="amount" type="number" className="input pl-10" value={form.amount} onChange={set} required min="1" placeholder="5000" />
           </div>
         </div>
-        <div>
-          <label className="input-label">Electricity Bill (₹)</label>
-          <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base">⚡</span>
-            <input name="electricityBill" type="number" className="input pl-10" value={form.electricityBill} onChange={set} min="0" placeholder="0" />
+      </div>
+
+      {/* Electricity Section */}
+      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 space-y-3">
+        <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">⚡ Electricity Details</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="input-label">Previous Reading (units)</label>
+            <input name="prevReading" type="number" className="input" value={form.prevReading} onChange={set} min="0" placeholder="0" />
+          </div>
+          <div>
+            <label className="input-label">Current Reading (units)</label>
+            <input name="currReading" type="number" className="input" value={form.currReading} onChange={set} min="0" placeholder="0" />
+          </div>
+          <div>
+            <label className="input-label">Rate per Unit (₹)</label>
+            <input name="ratePerUnit" type="number" className="input" value={form.ratePerUnit} onChange={set} min="0" step="0.01" placeholder="0" />
+          </div>
+          <div>
+            <label className="input-label">Units Consumed</label>
+            <input className="input bg-slate-50 text-slate-500" value={`${units} units`} readOnly />
           </div>
         </div>
+        {error && <p className="text-xs text-red-500 font-semibold">{error}</p>}
+        <div className="flex items-center justify-between bg-white rounded-xl px-4 py-2 border border-amber-200">
+          <span className="text-xs font-semibold text-amber-700">Electricity Bill</span>
+          <span className="font-bold text-amber-700">₹{elecBill.toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="input-label">Payment Status</label>
           <select name="status" className="input" value={form.status} onChange={set}>
@@ -108,12 +143,17 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
       </div>
 
       {/* Total */}
-      <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-2xl px-4 py-3">
-        <span className="text-sm font-semibold text-indigo-700">Total Amount</span>
-        <span className="text-lg font-bold text-indigo-700">₹{total.toLocaleString()}</span>
+      <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-2xl px-4 py-3">
+        <div className="text-xs text-indigo-600 space-y-0.5">
+          <p>Rent: ₹{(Number(form.amount) || 0).toLocaleString('en-IN')}</p>
+          <p>Electricity: ₹{elecBill.toLocaleString('en-IN')}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-indigo-500 font-medium">Total Amount</p>
+          <p className="text-xl font-bold text-indigo-700">₹{total.toLocaleString('en-IN')}</p>
+        </div>
       </div>
 
-      {/* Status indicator */}
       {form.status === 'Paid' && (
         <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 text-sm text-emerald-700">
           <span>📱</span>
