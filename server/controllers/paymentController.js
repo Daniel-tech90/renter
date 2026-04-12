@@ -59,10 +59,12 @@ exports.getByRenter = async (req, res) => {
 
     if (payments.length === 0) return res.json([]);
 
-    // Build continuous month sequence from first to current month
     const firstMonth = payments[0].month;
     const now = new Date();
-    const lastMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    // Use whichever is later: current month or last payment month
+    const lastPaymentMonth = payments[payments.length - 1].month;
+    const lastMonth = lastPaymentMonth > currentMonth ? lastPaymentMonth : currentMonth;
 
     const allMonths = [];
     let [y, m] = firstMonth.split('-').map(Number);
