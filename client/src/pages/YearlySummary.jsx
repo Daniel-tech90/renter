@@ -99,9 +99,7 @@ function TenantHistoryModal({ renterId, renterName, onClose }) {
                 </thead>
                 <tbody className="bg-white">
                   {payments.map((p) => (
-                    <tr key={p._id} className={`border-b border-slate-50 ${
-                      p.status === 'Room Closed' ? 'bg-slate-50/80 opacity-60' : 'hover:bg-slate-50/50'
-                    }`}>
+                    <tr key={p._id} className={`border-b border-slate-50 ${p.status === 'Room Closed' ? 'bg-slate-50/80 opacity-60' : 'hover:bg-slate-50/50'}`}>
                       <td className="table-cell font-semibold text-slate-700">{p.month}</td>
                       <td className="table-cell text-slate-700">{p.status === 'Room Closed' ? '—' : `₹${p.amount.toLocaleString('en-IN')}`}</td>
                       <td className="table-cell text-slate-500">{p.status === 'Room Closed' ? '—' : `${p.unitsConsumed || 0} u`}</td>
@@ -130,51 +128,10 @@ function TenantHistoryModal({ renterId, renterName, onClose }) {
   );
 }
 
-function ExpandedMonths({ renterId, year }) {
-  const [monthData, setMonthData] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    paymentService.getByRenter(renterId)
-      .then(({ data }) => {
-        const map = {};
-        data.forEach(p => { map[p.month] = p.status; });
-        setMonthData(map);
-      })
-      .finally(() => setLoading(false));
-  }, [renterId]);
-
-  if (loading) return <div className="w-4 h-4 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" />;
-
-  // Only show months that have a real record (paid or pending), exclude Room Closed
-  const activeMonths = MONTH_NAMES
-    .map((name, i) => ({ name, month: `${year}-${String(i + 1).padStart(2, '0')}` }))
-    .filter(({ month }) => monthData[month] && monthData[month] !== 'Room Closed');
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {activeMonths.map(({ name, month }) => {
-        const status = monthData[month];
-        let bg, dot;
-        if (status === 'Paid') {
-          bg = 'bg-emerald-50 border-emerald-200 text-emerald-700'; dot = 'bg-emerald-500';
-        } else {
-          bg = 'bg-red-50 border-red-200 text-red-600'; dot = 'bg-red-500';
-        }
-        return (
-          <span key={month} className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm ${bg}`}>
-            <span className={`w-2.5 h-2.5 rounded-sm ${dot} inline-block flex-shrink-0`}></span>
-            {name} {year}
-          </span>
-        );
-      })}
-    </div>
-  );
-}
+export default function YearlySummary() {
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(new Date().getFullYear());
-  const [expandedId, setExpandedId] = useState(null);
   const [tenantHistory, setTenantHistory] = useState(null);
 
   useEffect(() => {
@@ -198,11 +155,7 @@ function ExpandedMonths({ renterId, year }) {
             <p className="text-2xl font-bold text-slate-800">Yearly Summary</p>
           </div>
         </div>
-        <select
-          className="input max-w-[140px]"
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-        >
+        <select className="input max-w-[140px]" value={year} onChange={(e) => setYear(Number(e.target.value))}>
           {[2023, 2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
@@ -263,61 +216,52 @@ function ExpandedMonths({ renterId, year }) {
               </thead>
               <tbody className="bg-white">
                 {summary.map((t) => (
-                  <>
-                    <tr key={t.renter._id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                      <td className="table-cell">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-xs font-bold text-violet-600 flex-shrink-0">
-                            {t.renter.name.slice(0, 2).toUpperCase()}
-                          </div>
-                          <button
-                            onClick={() => setTenantHistory({ renterId: t.renter._id, renterName: t.renter.name })}
-                            className="font-semibold text-slate-800 hover:text-violet-600 hover:underline transition-colors text-left"
-                          >
-                            {t.renter.name}
-                          </button>
+                  <tr key={t.renter._id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <td className="table-cell">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-xs font-bold text-violet-600 flex-shrink-0">
+                          {t.renter.name.slice(0, 2).toUpperCase()}
                         </div>
-                      </td>
-                      <td className="table-cell">
-                        <span className="bg-violet-50 text-violet-700 border border-violet-100 px-2.5 py-1 rounded-lg text-xs font-bold">
-                          Room {t.renter.roomNumber}
-                        </span>
-                      </td>
-                      <td className="table-cell text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <span className="text-sm font-bold text-emerald-600">{t.monthsPaid}</span>
-                          <span className="text-slate-300">/</span>
-                          <span className="text-sm text-slate-400">12</span>
-                        </div>
-                        {/* Progress bar */}
-                        <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1">
-                          <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${(t.monthsPaid / 12) * 100}%` }} />
-                        </div>
-                      </td>
-                      <td className="table-cell text-center">
-                        <span className={`px-2.5 py-1 rounded-xl text-xs font-bold ${
-                          t.monthsPending === 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-500 border border-red-100'
-                        }`}>
-                          {t.monthsPending === 0 ? '✅ All Paid' : `${t.monthsPending} due`}
-                        </span>
-                      </td>
-                      <td className="table-cell font-bold text-emerald-700">₹{t.totalPaid.toLocaleString('en-IN')}</td>
-                      <td className="table-cell"><MonthGrid renterId={t.renter._id} year={year} /></td>
-                    </tr>
-                    {expandedId === t.renter._id && (
-                      <tr key={`${t.renter._id}-expanded`} className="bg-slate-50">
-                        <td colSpan={6} className="px-6 py-4">
-                          <ExpandedMonths renterId={t.renter._id} year={year} />
-                        </td>
-                      </tr>
-                    )}
-                  </>
+                        <button
+                          onClick={() => setTenantHistory({ renterId: t.renter._id, renterName: t.renter.name })}
+                          className="font-semibold text-slate-800 hover:text-violet-600 hover:underline transition-colors text-left"
+                        >
+                          {t.renter.name}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="table-cell">
+                      <span className="bg-violet-50 text-violet-700 border border-violet-100 px-2.5 py-1 rounded-lg text-xs font-bold">
+                        Room {t.renter.roomNumber}
+                      </span>
+                    </td>
+                    <td className="table-cell text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className="text-sm font-bold text-emerald-600">{t.monthsPaid}</span>
+                        <span className="text-slate-300">/</span>
+                        <span className="text-sm text-slate-400">12</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1">
+                        <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${(t.monthsPaid / 12) * 100}%` }} />
+                      </div>
+                    </td>
+                    <td className="table-cell text-center">
+                      <span className={`px-2.5 py-1 rounded-xl text-xs font-bold ${
+                        t.monthsPending === 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-500 border border-red-100'
+                      }`}>
+                        {t.monthsPending === 0 ? '✅ All Paid' : `${t.monthsPending} due`}
+                      </span>
+                    </td>
+                    <td className="table-cell font-bold text-emerald-700">₹{t.totalPaid.toLocaleString('en-IN')}</td>
+                    <td className="table-cell"><MonthGrid renterId={t.renter._id} year={year} /></td>
+                  </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
       </div>
+
       {tenantHistory && (
         <TenantHistoryModal
           renterId={tenantHistory.renterId}
