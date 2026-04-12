@@ -278,14 +278,15 @@ export default function YearlySummary() {
                       </td>
                     </tr>
                     {expandedId === t.renter._id && (
-                      <tr key={`${t.renter._id}-expanded`} className="bg-amber-50/50">
-                        <td colSpan={6} className="px-6 py-3">
+                      <tr key={`${t.renter._id}-expanded`} className="bg-slate-50">
+                        <td colSpan={7} className="px-6 py-3">
                           <div className="flex flex-wrap gap-2">
                             {t.pendingMonths.map(m => {
-                              const [y, mo] = m.split('-');
+                              const [yr, mo] = m.split('-');
                               return (
-                                <span key={m} className="bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1 rounded-xl text-xs font-semibold">
-                                  {MONTH_NAMES[Number(mo) - 1]} {y}
+                                <span key={m} className="flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
+                                  <span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block flex-shrink-0"></span>
+                                  {MONTH_NAMES[Number(mo) - 1]} {yr}
                                 </span>
                               );
                             })}
