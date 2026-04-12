@@ -130,7 +130,7 @@ function TenantHistoryModal({ renterId, renterName, onClose }) {
   );
 }
 
-function ExpandedMonths({ renterId, year, allMonths }) {
+function ExpandedMonths({ renterId, year }) {
   const [monthData, setMonthData] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -146,15 +146,17 @@ function ExpandedMonths({ renterId, year, allMonths }) {
 
   if (loading) return <div className="w-4 h-4 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" />;
 
+  // Only show months that have a real record (paid or pending), exclude Room Closed
+  const activeMonths = MONTH_NAMES
+    .map((name, i) => ({ name, month: `${year}-${String(i + 1).padStart(2, '0')}` }))
+    .filter(({ month }) => monthData[month] && monthData[month] !== 'Room Closed');
+
   return (
     <div className="flex flex-wrap gap-2">
-      {MONTH_NAMES.map((name, i) => {
-        const month = `${year}-${String(i + 1).padStart(2, '0')}`;
+      {activeMonths.map(({ name, month }) => {
         const status = monthData[month];
-        let bg, text, dot;
-        if (!status || status === 'Room Closed') {
-          bg = 'bg-slate-100 border-slate-200 text-slate-400'; dot = 'bg-slate-300';
-        } else if (status === 'Paid') {
+        let bg, dot;
+        if (status === 'Paid') {
           bg = 'bg-emerald-50 border-emerald-200 text-emerald-700'; dot = 'bg-emerald-500';
         } else {
           bg = 'bg-red-50 border-red-200 text-red-600'; dot = 'bg-red-500';
