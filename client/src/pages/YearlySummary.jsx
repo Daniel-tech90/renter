@@ -259,7 +259,6 @@ function ExpandedMonths({ renterId, year }) {
                   <th className="table-header text-center">Months Due</th>
                   <th className="table-header text-left">Total Paid</th>
                   <th className="table-header text-left">Month Status</th>
-                  <th className="table-header text-left">Unpaid Months</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
@@ -304,22 +303,10 @@ function ExpandedMonths({ renterId, year }) {
                       </td>
                       <td className="table-cell font-bold text-emerald-700">₹{t.totalPaid.toLocaleString('en-IN')}</td>
                       <td className="table-cell"><MonthGrid renterId={t.renter._id} year={year} /></td>
-                      <td className="table-cell">
-                        {t.pendingMonths.length === 0 ? (
-                          <span className="text-slate-300 text-xs">—</span>
-                        ) : (
-                          <button
-                            onClick={() => setExpandedId(expandedId === t.renter._id ? null : t.renter._id)}
-                            className="text-xs text-amber-600 hover:text-amber-800 font-semibold underline"
-                          >
-                            {expandedId === t.renter._id ? 'Hide' : `View ${t.pendingMonths.length} months`}
-                          </button>
-                        )}
-                      </td>
                     </tr>
                     {expandedId === t.renter._id && (
                       <tr key={`${t.renter._id}-expanded`} className="bg-slate-50">
-                        <td colSpan={7} className="px-6 py-4">
+                        <td colSpan={6} className="px-6 py-4">
                           <ExpandedMonths renterId={t.renter._id} year={year} />
                         </td>
                       </tr>
