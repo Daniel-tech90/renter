@@ -5,6 +5,8 @@ const paymentSchema = new mongoose.Schema({
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
   month: { type: String, required: true },
   amount: { type: Number, required: true },
+  electricityBill: { type: Number, default: 0 },
+  totalAmount: { type: Number, required: true },
   status: { type: String, enum: ['Paid', 'Pending', 'Under Review'], default: 'Pending' },
   paymentDate: { type: Date },
   notes: { type: String },

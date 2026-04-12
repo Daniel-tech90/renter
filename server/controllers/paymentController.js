@@ -33,7 +33,9 @@ exports.getAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const payment = await Payment.create({ ...req.body, adminId: req.adminId });
+    const { amount, electricityBill = 0 } = req.body;
+    const totalAmount = Number(amount) + Number(electricityBill);
+    const payment = await Payment.create({ ...req.body, electricityBill, totalAmount, adminId: req.adminId });
     await payment.populate('renterId', 'name roomNumber phone');
     if (payment.status === 'Paid') {
       await sendWhatsApp(
@@ -51,8 +53,10 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
+    const { amount, electricityBill = 0 } = req.body;
+    const totalAmount = Number(amount) + Number(electricityBill);
     const prev = await Payment.findById(req.params.id);
-    const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, {
+    const payment = await Payment.findByIdAndUpdate(req.params.id, { ...req.body, electricityBill, totalAmount }, {
       new: true, runValidators: true,
     }).populate('renterId', 'name roomNumber phone');
     if (!payment) return res.status(404).json({ message: 'Payment not found' });

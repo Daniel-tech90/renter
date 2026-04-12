@@ -202,6 +202,8 @@ export default function Payments() {
                 <th className="table-header text-left">Room</th>
                 <th className="table-header text-left">Month</th>
                 <th className="table-header text-left">Amount</th>
+                <th className="table-header text-left">Electricity</th>
+                <th className="table-header text-left">Total</th>
                 <th className="table-header text-left">Status</th>
                 <th className="table-header text-left">Bill</th>
                 <th className="table-header text-left">Actions</th>
@@ -240,6 +242,8 @@ export default function Payments() {
                     </td>
                     <td className="table-cell font-medium text-slate-600">{p.month}</td>
                     <td className="table-cell font-bold text-slate-800">₹{p.amount.toLocaleString()}</td>
+                    <td className="table-cell text-slate-600">₹{(p.electricityBill || 0).toLocaleString()}</td>
+                    <td className="table-cell font-bold text-indigo-700">₹{(p.totalAmount || p.amount).toLocaleString()}</td>
                     <td className="table-cell">{statusBadge(p.status)}</td>
 
                     {/* Bill Column */}

@@ -7,7 +7,7 @@ const currentMonth = () => new Date().toISOString().slice(0, 7);
 export default function PaymentForm({ payment, onSuccess, onClose }) {
   const [form, setForm] = useState({
     renterId: '', month: currentMonth(), amount: '',
-    status: 'Pending', paymentDate: '', notes: '',
+    electricityBill: '0', status: 'Pending', paymentDate: '', notes: '',
   });
   const [renters, setRenters] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -19,6 +19,7 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
         renterId: payment.renterId?._id || payment.renterId,
         month: payment.month,
         amount: payment.amount,
+        electricityBill: payment.electricityBill || '0',
         status: payment.status,
         paymentDate: payment.paymentDate ? payment.paymentDate.slice(0, 10) : '',
         notes: payment.notes || '',
@@ -34,6 +35,8 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
     }
     setForm(updated);
   };
+
+  const total = (Number(form.amount) || 0) + (Number(form.electricityBill) || 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,10 +76,17 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
           <input name="month" type="month" className="input" value={form.month} onChange={set} required disabled={!!payment} />
         </div>
         <div>
-          <label className="input-label">Amount (₹)</label>
+          <label className="input-label">Rent Amount (₹)</label>
           <div className="relative">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base">💰</span>
             <input name="amount" type="number" className="input pl-10" value={form.amount} onChange={set} required min="1" placeholder="5000" />
+          </div>
+        </div>
+        <div>
+          <label className="input-label">Electricity Bill (₹)</label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base">⚡</span>
+            <input name="electricityBill" type="number" className="input pl-10" value={form.electricityBill} onChange={set} min="0" placeholder="0" />
           </div>
         </div>
         <div>
@@ -95,6 +105,12 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
       <div>
         <label className="input-label">Notes (optional)</label>
         <input name="notes" className="input" value={form.notes} onChange={set} placeholder="Any additional notes..." />
+      </div>
+
+      {/* Total */}
+      <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-2xl px-4 py-3">
+        <span className="text-sm font-semibold text-indigo-700">Total Amount</span>
+        <span className="text-lg font-bold text-indigo-700">₹{total.toLocaleString()}</span>
       </div>
 
       {/* Status indicator */}
