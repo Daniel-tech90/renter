@@ -84,7 +84,7 @@ exports.submitScreenshot = async (req, res) => {
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
     if (!req.file) return res.status(400).json({ message: 'Screenshot is required' });
 
-    payment.screenshotUrl = `/uploads/${req.file.filename}`;
+    payment.screenshotUrl = req.file.path;
     payment.status = 'Under Review';
     payment.submittedAt = new Date();
     await payment.save();

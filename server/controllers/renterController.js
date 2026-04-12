@@ -72,7 +72,7 @@ exports.uploadGovtId = async (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'File is required' });
     const renter = await Renter.findOneAndUpdate(
       { _id: req.params.id, adminId: req.adminId },
-      { govtIdDocUrl: `/uploads/${req.file.filename}` },
+      { govtIdDocUrl: req.file.path },
       { new: true }
     );
     if (!renter) return res.status(404).json({ message: 'Renter not found' });
