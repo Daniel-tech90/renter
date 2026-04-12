@@ -207,6 +207,18 @@ export default function Payments() {
   const reviewCount = payments.filter(p => p.status === 'Under Review').length;
   const totalAmount = payments.filter(p => p.status === 'Paid').reduce((s, p) => s + p.amount, 0);
 
+  // Show one row per tenant (latest record) unless month filter is active
+  const displayPayments = filters.month
+    ? payments
+    : Object.values(
+        payments.reduce((acc, p) => {
+          const id = p.renterId?._id;
+          if (!id) return acc;
+          if (!acc[id] || p.month > acc[id].month) acc[id] = p;
+          return acc;
+        }, {})
+      ).sort((a, b) => (a.renterId?.name || '').localeCompare(b.renterId?.name || ''));
+
   const statusBadge = (status) => {
     if (status === 'Paid') return <span className="badge-paid">✓ Paid</span>;
     if (status === 'Under Review') return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">📸 Under Review</span>;
@@ -308,7 +320,7 @@ export default function Payments() {
                   </td>
                 </tr>
               ) : (
-                payments.map((p) => (
+                displayPayments.map((p) => (
                   <tr key={p._id} className={`table-row ${p.status === 'Under Review' ? 'bg-blue-50/30' : ''}`}>
                     <td className="table-cell">
                       <div className="flex items-center gap-3">
@@ -395,9 +407,9 @@ export default function Payments() {
           </table>
         </div>
 
-        {payments.length > 0 && (
+        {displayPayments.length > 0 && (
           <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-sm">
-            <p className="text-slate-400">{payments.length} records shown</p>
+            <p className="text-slate-400">{displayPayments.length} tenants shown</p>
             <p className="font-semibold text-slate-700">
               Total Collected: <span className="text-emerald-600">₹{totalAmount.toLocaleString()}</span>
             </p>
