@@ -171,7 +171,7 @@ exports.create = async (req, res) => {
     if (payment.status === 'Paid') {
       await sendWhatsApp(
         payment.renterId.phone,
-        `✅ Rent Confirmed!\nDear ${payment.renterId.name}, your rent of ₹${payment.amount} for ${payment.month} has been received. Thank you!`
+        `✅ Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* has been received.\n\n📋 *Details:*\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nThank you! 🙏\n- Ramesh Rental Portal`
       );
     }
     res.status(201).json({ payment, advanceBalance });
@@ -199,12 +199,12 @@ exports.update = async (req, res) => {
     if (statusChanged && payment.status === 'Paid') {
       await sendWhatsApp(
         payment.renterId.phone,
-        `✅ Rent Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour rent payment of ₹${payment.amount} for ${payment.month} has been received and confirmed.\n\nThank you for your timely payment! 🙏\n\n- Ramesh\nRental Portal`
+        `✅ Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* has been confirmed.\n\n📋 *Details:*\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nThank you for your timely payment! 🙏\n- Ramesh Rental Portal`
       );
     } else if (statusChanged && payment.status === 'Pending') {
       await sendWhatsApp(
         payment.renterId.phone,
-        `⏰ Rent Payment Reminder!\n\nDear ${payment.renterId.name},\nYour rent of ₹${payment.amount} for ${payment.month} is marked as Pending.\n\nPlease make the payment at your earliest convenience.\n\n- Ramesh\nRental Portal`
+        `⏰ Payment Reminder!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* is pending.\n\n📋 *Details:*\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total Due: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nPlease pay at your earliest convenience.\n- Ramesh Rental Portal`
       );
     }
 
@@ -251,7 +251,7 @@ exports.approvePayment = async (req, res) => {
 
     await sendWhatsApp(
       payment.renterId.phone,
-      `✅ Rent Payment Approved!\n\nDear ${payment.renterId.name},\nYour rent payment of ₹${payment.amount} for ${payment.month} has been verified and approved.\n\nThank you! 🙏\n- Ramesh`
+      `✅ Payment Approved!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* has been verified.\n\n📋 *Details:*\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nThank you! 🙏\n- Ramesh Rental Portal`
     );
 
     res.json({ message: 'Payment approved successfully', payment });
@@ -292,9 +292,9 @@ exports.sendMessage = async (req, res) => {
     let message;
 
     if (type === 'reminder') {
-      message = `⏰ Rent Due Reminder!\n\nDear ${payment.renterId.name},\nYour rent of ₹${payment.amount} for ${payment.month} is still pending.\n\nPlease pay at your earliest convenience.\n\n- Ramesh\nRental Portal`;
+      message = `⏰ Payment Reminder!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* is still pending.\n\n📋 *Details:*\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total Due: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nPlease pay at your earliest convenience.\n- Ramesh Rental Portal`;
     } else {
-      message = `✅ Rent Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour rent payment of ₹${payment.amount} for ${payment.month} has been received and confirmed.\n\nThank you for your timely payment! 🙏\n\n- Ramesh\nRental Portal`;
+      message = `✅ Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* has been received.\n\n📋 *Details:*\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nThank you! 🙏\n- Ramesh Rental Portal`;
     }
 
     await sendWhatsApp(payment.renterId.phone, message);
