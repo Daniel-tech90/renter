@@ -62,7 +62,10 @@ exports.update = async (req, res) => {
 
 exports.remove = async (req, res) => {
   try {
-    await Renter.findOneAndUpdate({ _id: req.params.id, adminId: req.adminId }, { isActive: false, leftAt: new Date() });
+    await Renter.findOneAndUpdate(
+      { _id: req.params.id, adminId: req.adminId },
+      { isActive: false, leftAt: new Date(), email: null, password: null }
+    );
     res.json({ message: 'Renter removed' });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -90,6 +93,9 @@ exports.markLeft = async (req, res) => {
     if (!renter) return res.status(404).json({ message: 'Renter not found' });
     renter.isActive = false;
     renter.leftAt = new Date();
+    // Clear login credentials so old tenant cannot login after leaving
+    renter.email = null;
+    renter.password = null;
     await renter.save();
     res.json({ message: `${renter.name} marked as left` });
   } catch (err) {

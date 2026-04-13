@@ -4,8 +4,8 @@ const Payment = require('../models/Payment');
 // GET /api/renter/dashboard
 exports.getDashboard = async (req, res) => {
   try {
-    const renter = await Renter.findById(req.user.id).select('-password');
-    if (!renter) return res.status(404).json({ message: 'Renter not found' });
+    const renter = await Renter.findOne({ _id: req.user.id, isActive: true }).select('-password');
+    if (!renter) return res.status(403).json({ message: 'Account is no longer active. Please contact admin.' });
 
     const payments = await Payment.find({ renterId: req.user.id });
 
