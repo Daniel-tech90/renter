@@ -256,19 +256,24 @@ export default function AnnualIncome() {
                             </div>
                           );
                         } else if (st === 'unpaid') {
-                          bg = isCurrent ? '#fee2e2' : '#fff7f7';
-                          content = <span style={{ fontSize: '13px' }}>⚠️</span>;
+                          bg = isCurrent ? '#fca5a5' : '#fee2e2';
+                          content = (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
+                              <span style={{ fontSize: '13px' }}>⚠️</span>
+                              <span style={{ fontSize: '9px', fontWeight: 800, color: '#b91c1c' }}>Due</span>
+                            </div>
+                          );
                         } else {
                           content = <span style={{ color: '#cbd5e1', fontSize: '11px' }}>—</span>;
                         }
                         return (
                           <td key={i} style={{
                             border: '1.5px solid #94a3b8',
-                            borderLeft: i === 0 ? '1.5px solid #94a3b8' : '1.5px solid #94a3b8',
                             padding: '6px 4px',
                             textAlign: 'center',
                             background: bg,
                             verticalAlign: 'middle',
+                            borderLeft: st === 'unpaid' ? '3px solid #dc2626' : '1.5px solid #94a3b8',
                           }}>
                             {content}
                           </td>
