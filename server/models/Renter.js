@@ -15,6 +15,7 @@ const renterSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   leftAt: { type: Date },
   tenantCycle: { type: Number, default: 1 },
+  advanceBalance: { type: Number, default: 0 },
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
   role: { type: String, default: 'renter' },
 }, { timestamps: true });

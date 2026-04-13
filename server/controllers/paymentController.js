@@ -114,22 +114,62 @@ exports.getAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { amount, prevReading = 0, currReading = 0, ratePerUnit = 0 } = req.body;
+    const { amount, prevReading = 0, currReading = 0, ratePerUnit = 0, isAdvance = false, advanceAmount = 0 } = req.body;
     const unitsConsumed = Math.max(0, Number(currReading) - Number(prevReading));
     const electricityBill = unitsConsumed * Number(ratePerUnit);
     const totalAmount = Number(amount) + electricityBill;
-    // Get current tenantCycle from renter
+
+    // Get renter for tenantCycle and advanceBalance
     const renter = await Renter.findById(req.body.renterId);
     const tenantCycle = renter?.tenantCycle || 1;
-    const payment = await Payment.create({ ...req.body, unitsConsumed, electricityBill, totalAmount, tenantCycle, adminId: req.adminId });
-    await payment.populate('renterId', 'name roomNumber phone');
+    let advanceBalance = renter?.advanceBalance || 0;
+
+    let advanceUsed = 0;
+    let advanceAdded = 0;
+    let amountPaid = 0;
+    let status = req.body.status || 'Pending';
+
+    if (isAdvance && Number(advanceAmount) > 0) {
+      // Pure advance payment — add to balance
+      advanceAdded = Number(advanceAmount);
+      advanceBalance += advanceAdded;
+      await Renter.findByIdAndUpdate(req.body.renterId, { advanceBalance });
+      amountPaid = 0;
+      status = 'Pending';
+    } else if (status === 'Paid' || advanceBalance > 0) {
+      // Try to use advance balance
+      if (advanceBalance >= totalAmount) {
+        advanceUsed = totalAmount;
+        advanceBalance -= totalAmount;
+        amountPaid = 0;
+        status = 'Paid';
+      } else if (advanceBalance > 0) {
+        advanceUsed = advanceBalance;
+        amountPaid = totalAmount - advanceBalance;
+        advanceBalance = 0;
+        status = status === 'Paid' ? 'Paid' : 'Partial';
+      } else {
+        amountPaid = totalAmount;
+      }
+      await Renter.findByIdAndUpdate(req.body.renterId, { advanceBalance });
+    } else {
+      amountPaid = totalAmount;
+    }
+
+    const payment = await Payment.create({
+      ...req.body, unitsConsumed, electricityBill, totalAmount,
+      tenantCycle, advanceUsed, advanceAdded, amountPaid, status,
+      adminId: req.adminId,
+    });
+    await payment.populate('renterId', 'name roomNumber phone advanceBalance');
+
     if (payment.status === 'Paid') {
       await sendWhatsApp(
         payment.renterId.phone,
         `✅ Rent Confirmed!\nDear ${payment.renterId.name}, your rent of ₹${payment.amount} for ${payment.month} has been received. Thank you!`
       );
     }
-    res.status(201).json(payment);
+    res.status(201).json({ payment, advanceBalance });
   } catch (err) {
     if (err.code === 11000)
       return res.status(400).json({ message: 'Payment record already exists for this month' });

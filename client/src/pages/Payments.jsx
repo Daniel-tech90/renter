@@ -204,7 +204,8 @@ export default function Payments() {
 
   const statusBadge = (status) => {
     if (status === 'Paid') return <span className="badge-paid">✓ Paid</span>;
-    if (status === 'Under Review') return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">📸 Under Review</span>;
+    if (status === 'Partial') return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">💳 Partial</span>;
+    if (status === 'Under Review') return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200">📸 Review</span>;
     return <span className="badge-pending">⏳ Pending</span>;
   };
 

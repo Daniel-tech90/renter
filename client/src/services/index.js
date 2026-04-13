@@ -22,6 +22,7 @@ export const paymentService = {
   getAll: (params = {}) => api.get('/payments', { params }),
   getByRenter: (renterId) => api.get(`/payments/renter/${renterId}`),
   getLastReading: (renterId) => api.get(`/payments/renter/${renterId}/last-reading`),
+  getAdvanceBalance: (renterId) => api.get(`/payments/renter/${renterId}/advance`),
   getYearlySummary: (year) => api.get(`/payments/yearly-summary?year=${year}`),
   create: (data) => api.post('/payments', data),
   update: (id, data) => api.put(`/payments/${id}`, data),

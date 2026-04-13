@@ -10,6 +10,14 @@ router.use(auth);
 router.get('/', getAll);
 router.get('/yearly-summary', getYearlySummary);
 router.get('/renter/:renterId/last-reading', getLastReading);
+router.get('/renter/:renterId/advance', async (req, res) => {
+  try {
+    const Renter = require('../models/Renter');
+    const r = await Renter.findOne({ _id: req.params.renterId, adminId: req.adminId }).select('advanceBalance name');
+    if (!r) return res.status(404).json({ message: 'Renter not found' });
+    res.json({ advanceBalance: r.advanceBalance || 0, name: r.name });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
 router.get('/renter/:renterId', getByRenter);
 router.post('/', create);
 router.put('/:id', update);
