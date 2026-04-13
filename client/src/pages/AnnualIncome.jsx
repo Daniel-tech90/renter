@@ -171,72 +171,171 @@ export default function AnnualIncome() {
             <p className="text-slate-500 font-semibold">No data for {year}</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-100">
-            <table className="w-full text-xs">
-              <thead className="bg-slate-50 sticky top-0 z-10">
-                <tr>
-                  <th className="table-header text-left sticky left-0 bg-slate-50 z-20 min-w-[140px]">Tenant</th>
-                  {MONTHS.map((m, i) => (
-                    <th key={m} className={`table-header text-center min-w-[52px] ${
-                      year === CURRENT_YEAR && i === CURRENT_MONTH ? 'bg-indigo-50 text-indigo-600' : ''
-                    }`}>
-                      {m}
-                      {year === CURRENT_YEAR && i === CURRENT_MONTH && <span className="block text-[8px] text-indigo-400">now</span>}
-                    </th>
-                  ))}
-                  <th className="table-header text-right min-w-[90px]">Total</th>
+          <div className="overflow-x-auto">
+            <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px' }}>
+              <thead>
+                <tr style={{ background: '#f1f5f9' }}>
+                  <th style={{ border: '1px solid #cbd5e1', padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#475569', position: 'sticky', left: 0, background: '#e2e8f0', zIndex: 20, minWidth: '150px', whiteSpace: 'nowrap' }}>
+                    Tenant
+                  </th>
+                  {MONTHS.map((m, i) => {
+                    const isCurrent = year === CURRENT_YEAR && i === CURRENT_MONTH;
+                    return (
+                      <th key={m} style={{
+                        border: '1px solid #cbd5e1',
+                        padding: '8px 6px',
+                        textAlign: 'center',
+                        fontWeight: 700,
+                        color: isCurrent ? '#4f46e5' : '#475569',
+                        background: isCurrent ? '#e0e7ff' : '#f1f5f9',
+                        minWidth: '70px',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {m}
+                        {isCurrent && <div style={{ fontSize: '9px', color: '#6366f1', fontWeight: 600 }}>▼ now</div>}
+                      </th>
+                    );
+                  })}
+                  <th style={{ border: '1px solid #cbd5e1', padding: '8px 10px', textAlign: 'right', fontWeight: 700, color: '#475569', background: '#e2e8f0', minWidth: '90px', whiteSpace: 'nowrap' }}>
+                    Total
+                  </th>
                 </tr>
               </thead>
-              <tbody className="bg-white">
-                {summary.map((t) => {
+              <tbody>
+                {summary.map((t, rowIdx) => {
                   const rowTotal = MONTHS.reduce((s, _, i) => s + cellAmount(t.renter._id, i), 0);
+                  const isEven = rowIdx % 2 === 0;
                   return (
-                    <tr key={t.renter._id} className="border-b border-slate-50 hover:bg-slate-50/50">
-                      <td className="table-cell sticky left-0 bg-white z-10">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-lg flex items-center justify-center text-[10px] font-bold text-violet-600 flex-shrink-0">
+                    <tr key={t.renter._id} style={{ background: isEven ? '#ffffff' : '#f8fafc' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f0f9ff'}
+                      onMouseLeave={e => e.currentTarget.style.background = isEven ? '#ffffff' : '#f8fafc'}
+                    >
+                      {/* Tenant name cell */}
+                      <td style={{
+                        border: '1px solid #cbd5e1',
+                        padding: '7px 12px',
+                        fontWeight: 600,
+                        color: '#334155',
+                        position: 'sticky',
+                        left: 0,
+                        background: isEven ? '#ffffff' : '#f8fafc',
+                        zIndex: 10,
+                        whiteSpace: 'nowrap',
+                        borderRight: '2px solid #94a3b8',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '26px', height: '26px', borderRadius: '8px',
+                            background: 'linear-gradient(135deg,#ede9fe,#ddd6fe)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '10px', fontWeight: 700, color: '#7c3aed', flexShrink: 0,
+                          }}>
                             {t.renter.name.slice(0,2).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-semibold text-slate-700 text-xs">{t.renter.name}</p>
-                            <p className="text-[10px] text-slate-400">Room {t.renter.roomNumber}</p>
+                            <div style={{ fontSize: '12px', fontWeight: 700 }}>{t.renter.name}</div>
+                            <div style={{ fontSize: '10px', color: '#94a3b8' }}>Room {t.renter.roomNumber}</div>
                           </div>
                         </div>
                       </td>
+
+                      {/* Month cells */}
                       {MONTHS.map((_, i) => {
                         const st = cellStatus(t.renter._id, i);
                         const amt = cellAmount(t.renter._id, i);
                         const isCurrent = year === CURRENT_YEAR && i === CURRENT_MONTH;
+                        let bg = isCurrent ? '#eef2ff' : 'transparent';
+                        let content, textColor;
+                        if (st === 'paid') {
+                          bg = isCurrent ? '#d1fae5' : '#f0fdf4';
+                          textColor = '#15803d';
+                          content = (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
+                              <span style={{ fontSize: '13px' }}>✅</span>
+                              <span style={{ fontSize: '9px', fontWeight: 700, color: '#15803d' }}>{fmt(amt)}</span>
+                            </div>
+                          );
+                        } else if (st === 'unpaid') {
+                          bg = isCurrent ? '#fee2e2' : '#fff7f7';
+                          content = <span style={{ fontSize: '13px' }}>⚠️</span>;
+                        } else {
+                          content = <span style={{ color: '#cbd5e1', fontSize: '11px' }}>—</span>;
+                        }
                         return (
-                          <td key={i} className={`table-cell text-center ${isCurrent ? 'bg-indigo-50/50' : ''}`}>
-                            {st === 'paid' ? (
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span className="text-emerald-500 text-sm">✅</span>
-                                <span className="text-[9px] text-emerald-600 font-semibold">{fmt(amt)}</span>
-                              </div>
-                            ) : st === 'unpaid' ? (
-                              <span className="text-red-400 text-sm">⚠️</span>
-                            ) : (
-                              <span className="text-slate-200 text-xs">—</span>
-                            )}
+                          <td key={i} style={{
+                            border: '1px solid #e2e8f0',
+                            borderLeft: i === 0 ? '1px solid #e2e8f0' : '1px solid #e2e8f0',
+                            padding: '6px 4px',
+                            textAlign: 'center',
+                            background: bg,
+                            verticalAlign: 'middle',
+                          }}>
+                            {content}
                           </td>
                         );
                       })}
-                      <td className="table-cell text-right font-bold text-emerald-700">{fmt(rowTotal)}</td>
+
+                      {/* Row total */}
+                      <td style={{
+                        border: '1px solid #cbd5e1',
+                        borderLeft: '2px solid #94a3b8',
+                        padding: '7px 10px',
+                        textAlign: 'right',
+                        fontWeight: 700,
+                        color: rowTotal > 0 ? '#15803d' : '#94a3b8',
+                        background: isEven ? '#f0fdf4' : '#ecfdf5',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {rowTotal > 0 ? fmt(rowTotal) : '—'}
+                      </td>
                     </tr>
                   );
                 })}
+
                 {/* Monthly totals row */}
-                <tr className="bg-slate-50 border-t-2 border-slate-200 font-bold">
-                  <td className="table-cell sticky left-0 bg-slate-50 text-xs font-bold text-slate-600">Monthly Total</td>
-                  {monthlyIncome.map((v, i) => (
-                    <td key={i} className={`table-cell text-center text-xs font-bold ${
-                      v > 0 ? 'text-emerald-700' : 'text-slate-300'
-                    } ${year === CURRENT_YEAR && i === CURRENT_MONTH ? 'bg-indigo-50/50' : ''}`}>
-                      {v > 0 ? fmt(v) : '—'}
-                    </td>
-                  ))}
-                  <td className="table-cell text-right text-sm font-bold text-emerald-700">{fmt(annualTotal)}</td>
+                <tr style={{ background: '#f1f5f9', borderTop: '2px solid #94a3b8' }}>
+                  <td style={{
+                    border: '1px solid #cbd5e1',
+                    padding: '8px 12px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    position: 'sticky',
+                    left: 0,
+                    background: '#e2e8f0',
+                    zIndex: 10,
+                    borderRight: '2px solid #94a3b8',
+                    fontSize: '11px',
+                  }}>
+                    📊 Monthly Total
+                  </td>
+                  {monthlyIncome.map((v, i) => {
+                    const isCurrent = year === CURRENT_YEAR && i === CURRENT_MONTH;
+                    return (
+                      <td key={i} style={{
+                        border: '1px solid #cbd5e1',
+                        padding: '8px 4px',
+                        textAlign: 'center',
+                        fontWeight: 700,
+                        fontSize: '11px',
+                        color: v > 0 ? '#15803d' : '#94a3b8',
+                        background: isCurrent ? '#e0e7ff' : '#f1f5f9',
+                      }}>
+                        {v > 0 ? fmt(v) : '—'}
+                      </td>
+                    );
+                  })}
+                  <td style={{
+                    border: '1px solid #cbd5e1',
+                    borderLeft: '2px solid #94a3b8',
+                    padding: '8px 10px',
+                    textAlign: 'right',
+                    fontWeight: 800,
+                    fontSize: '13px',
+                    color: '#15803d',
+                    background: '#dcfce7',
+                  }}>
+                    {fmt(annualTotal)}
+                  </td>
                 </tr>
               </tbody>
             </table>
