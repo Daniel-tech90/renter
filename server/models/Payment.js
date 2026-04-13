@@ -14,6 +14,7 @@ const paymentSchema = new mongoose.Schema({
   totalAmount: { type: Number, required: true },
   advanceUsed: { type: Number, default: 0 },
   advanceAdded: { type: Number, default: 0 },
+  remainingAdvance: { type: Number, default: 0 },
   amountPaid: { type: Number, default: 0 },
   status: { type: String, enum: ['Paid', 'Pending', 'Under Review', 'Partial'], default: 'Pending' },
   paymentDate: { type: Date },
