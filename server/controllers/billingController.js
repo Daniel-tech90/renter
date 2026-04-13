@@ -163,7 +163,7 @@ Your bill for *${bill.month}* is ready.
 Please make the payment before the due date.
 
 Thank you! 🙏
-- Ramishwar Sahu`;
+- Ramesh Sahu`;
 
     await sendWhatsApp(r.phone, message, mediaUrl);
     res.json({ message: 'WhatsApp message sent with PDF receipt!' });
@@ -213,7 +213,7 @@ exports.generateReceipt = async (req, res) => {
     // ── Owner Details ───────────────────────────────────────────
     doc.fillColor('#4F46E5').fontSize(11).font('Helvetica-Bold').text('OWNER DETAILS', 50, 195);
     let y = 215;
-    [['Name', 'Ramishwar Sahu'], ['Contact', 'ramishwarsahu9@gmail.com'], ['Portal', 'Ramesh Rental Portal']].forEach(([l, v]) => {
+    [['Name', 'Ramesh Sahu'], ['Contact', 'ramishwarsahu9@gmail.com'], ['Portal', 'Ramesh Rental Portal']].forEach(([l, v]) => {
       doc.fillColor('#64748b').fontSize(9).font('Helvetica').text(l, 50, y);
       doc.fillColor('#1e293b').fontSize(9).font('Helvetica-Bold').text(v, 180, y);
       y += 16;

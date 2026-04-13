@@ -151,12 +151,12 @@ exports.update = async (req, res) => {
     if (statusChanged && payment.status === 'Paid') {
       await sendWhatsApp(
         payment.renterId.phone,
-        `✅ Rent Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour rent payment of ₹${payment.amount} for ${payment.month} has been received and confirmed.\n\nThank you for your timely payment! 🙏\n\n- Ramishwar Sahu\nRental Portal`
+        `✅ Rent Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour rent payment of ₹${payment.amount} for ${payment.month} has been received and confirmed.\n\nThank you for your timely payment! 🙏\n\n- Ramesh Sahu\nRental Portal`
       );
     } else if (statusChanged && payment.status === 'Pending') {
       await sendWhatsApp(
         payment.renterId.phone,
-        `⏰ Rent Payment Reminder!\n\nDear ${payment.renterId.name},\nYour rent of ₹${payment.amount} for ${payment.month} is marked as Pending.\n\nPlease make the payment at your earliest convenience.\n\n- Ramishwar Sahu\nRental Portal`
+        `⏰ Rent Payment Reminder!\n\nDear ${payment.renterId.name},\nYour rent of ₹${payment.amount} for ${payment.month} is marked as Pending.\n\nPlease make the payment at your earliest convenience.\n\n- Ramesh Sahu\nRental Portal`
       );
     }
 
@@ -203,7 +203,7 @@ exports.approvePayment = async (req, res) => {
 
     await sendWhatsApp(
       payment.renterId.phone,
-      `✅ Rent Payment Approved!\n\nDear ${payment.renterId.name},\nYour rent payment of ₹${payment.amount} for ${payment.month} has been verified and approved.\n\nThank you! 🙏\n- Ramishwar Sahu`
+      `✅ Rent Payment Approved!\n\nDear ${payment.renterId.name},\nYour rent payment of ₹${payment.amount} for ${payment.month} has been verified and approved.\n\nThank you! 🙏\n- Ramesh Sahu`
     );
 
     res.json({ message: 'Payment approved successfully', payment });
@@ -225,7 +225,7 @@ exports.rejectPayment = async (req, res) => {
 
     await sendWhatsApp(
       payment.renterId.phone,
-      `❌ Payment Screenshot Rejected!\n\nDear ${payment.renterId.name},\nYour payment screenshot for ₹${payment.amount} (${payment.month}) could not be verified.\n\nPlease submit a clear screenshot of your payment.\n\n- Ramishwar Sahu`
+      `❌ Payment Screenshot Rejected!\n\nDear ${payment.renterId.name},\nYour payment screenshot for ₹${payment.amount} (${payment.month}) could not be verified.\n\nPlease submit a clear screenshot of your payment.\n\n- Ramesh Sahu`
     );
 
     res.json({ message: 'Payment rejected', payment });
@@ -244,9 +244,9 @@ exports.sendMessage = async (req, res) => {
     let message;
 
     if (type === 'reminder') {
-      message = `⏰ Rent Due Reminder!\n\nDear ${payment.renterId.name},\nYour rent of ₹${payment.amount} for ${payment.month} is still pending.\n\nPlease pay at your earliest convenience.\n\n- Ramishwar Sahu\nRental Portal`;
+      message = `⏰ Rent Due Reminder!\n\nDear ${payment.renterId.name},\nYour rent of ₹${payment.amount} for ${payment.month} is still pending.\n\nPlease pay at your earliest convenience.\n\n- Ramesh Sahu\nRental Portal`;
     } else {
-      message = `✅ Rent Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour rent payment of ₹${payment.amount} for ${payment.month} has been received and confirmed.\n\nThank you for your timely payment! 🙏\n\n- Ramishwar Sahu\nRental Portal`;
+      message = `✅ Rent Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour rent payment of ₹${payment.amount} for ${payment.month} has been received and confirmed.\n\nThank you for your timely payment! 🙏\n\n- Ramesh Sahu\nRental Portal`;
     }
 
     await sendWhatsApp(payment.renterId.phone, message);
@@ -272,7 +272,7 @@ exports.generateBill = async (req, res) => {
     // Header
     doc.rect(0, 0, 595, 100).fill('#4F46E5');
     doc.fillColor('white').fontSize(22).font('Helvetica-Bold').text('RENT & ELECTRICITY BILL', 50, 25, { align: 'center' });
-    doc.fontSize(10).font('Helvetica').text('Ramishwar Sahu Rental Portal', 50, 60, { align: 'center' });
+    doc.fontSize(10).font('Helvetica').text('Ramesh Sahu Rental Portal', 50, 60, { align: 'center' });
 
     // Status badge
     const isPaid = payment.status === 'Paid';
@@ -337,7 +337,7 @@ exports.generateBill = async (req, res) => {
     doc.moveTo(0, 780).lineTo(595, 780).strokeColor('#e2e8f0').lineWidth(1).stroke();
     doc.fillColor('#94a3b8').fontSize(8).font('Helvetica')
       .text('This is a computer-generated bill.', 50, 792, { align: 'center', width: 495 })
-      .text(`Ramishwar Sahu Rental Portal  |  Generated on ${new Date().toLocaleString('en-IN')}`, 50, 808, { align: 'center', width: 495 });
+      .text(`Ramesh Sahu Rental Portal  |  Generated on ${new Date().toLocaleString('en-IN')}`, 50, 808, { align: 'center', width: 495 });
 
     doc.end();
   } catch (err) {
@@ -361,7 +361,7 @@ exports.generateReceipt = async (req, res) => {
     doc.fillColor('white').fontSize(26).font('Helvetica-Bold')
        .text('RENT RECEIPT', 50, 30, { align: 'center' });
     doc.fontSize(11).font('Helvetica')
-       .text('Ramishwar Sahu Rental Portal', 50, 62, { align: 'center' });
+       .text('Ramesh Sahu Rental Portal', 50, 62, { align: 'center' });
 
     // ── Receipt Meta ───────────────────────────────────────────
     doc.fillColor('#1e293b').fontSize(10).font('Helvetica')
@@ -432,7 +432,7 @@ exports.generateReceipt = async (req, res) => {
     doc.moveTo(0, 750).lineTo(595, 750).strokeColor('#e2e8f0').lineWidth(1).stroke();
     doc.fillColor('#94a3b8').fontSize(9).font('Helvetica')
        .text('This is a computer-generated receipt and does not require a signature.', 50, 762, { align: 'center', width: 495 })
-       .text('Ramishwar Sahu Rental Portal  |  ramishwarsahu9@gmail.com', 50, 778, { align: 'center', width: 495 })
+       .text('Ramesh Sahu Rental Portal  |  ramishwarsahu9@gmail.com', 50, 778, { align: 'center', width: 495 })
        .text(`Generated on ${new Date().toLocaleString()}`, 50, 794, { align: 'center', width: 495 });
 
     doc.end();

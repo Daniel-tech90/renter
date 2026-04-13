@@ -36,7 +36,7 @@ exports.create = async (req, res) => {
     await renter.save();
     await sendWhatsApp(
       renter.phone,
-      `Hello ${renter.name},\nWelcome to Ramishwar Sahu Rental Portal\n\nRoom: ${renter.roomNumber}\nRent: ₹${renter.rentAmount}\n\nThank you!`
+      `Hello ${renter.name},\nWelcome to Ramesh Sahu Rental Portal\n\nRoom: ${renter.roomNumber}\nRent: ₹${renter.rentAmount}\n\nThank you!`
     );
     res.status(201).json(renter);
   } catch (err) {

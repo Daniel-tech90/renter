@@ -67,7 +67,7 @@ exports.downloadReceipt = async (req, res) => {
     // Header
     doc.rect(0, 0, 595, 100).fill('#059669');
     doc.fillColor('white').fontSize(26).font('Helvetica-Bold').text('RENT RECEIPT', 50, 28, { align: 'center' });
-    doc.fontSize(11).font('Helvetica').text('Ramishwar Sahu Rental Portal', 50, 62, { align: 'center' });
+    doc.fontSize(11).font('Helvetica').text('Ramesh Sahu Rental Portal', 50, 62, { align: 'center' });
 
     // Meta
     doc.fillColor('#1e293b').fontSize(10).font('Helvetica')
@@ -128,7 +128,7 @@ exports.downloadReceipt = async (req, res) => {
     doc.moveTo(0, 750).lineTo(595, 750).strokeColor('#e2e8f0').lineWidth(1).stroke();
     doc.fillColor('#94a3b8').fontSize(9).font('Helvetica')
       .text('This is a computer-generated receipt.', 50, 762, { align: 'center', width: 495 })
-      .text('Ramishwar Sahu Rental Portal  |  ramishwarsahu9@gmail.com', 50, 778, { align: 'center', width: 495 });
+      .text('Ramesh Sahu Rental Portal  |  ramishwarsahu9@gmail.com', 50, 778, { align: 'center', width: 495 });
 
     doc.end();
   } catch (err) {

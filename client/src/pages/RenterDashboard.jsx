@@ -135,7 +135,7 @@ export default function RenterDashboard() {
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center text-xl flex-shrink-0">🏠</div>
             <div className="min-w-0">
-              <h1 className="font-bold text-base sm:text-lg truncate">Ramishwar Sahu Rental Portal</h1>
+              <h1 className="font-bold text-base sm:text-lg truncate">Ramesh Sahu Rental Portal</h1>
               <p className="text-emerald-100 text-xs">Renter Dashboard</p>
             </div>
           </div>
