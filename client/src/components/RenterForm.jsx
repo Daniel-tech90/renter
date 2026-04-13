@@ -49,7 +49,7 @@ export default function RenterForm({ renter, onSuccess, onClose }) {
       if (govtIdFile && saved?._id) {
         await renterService.uploadGovtId(saved._id, govtIdFile);
       }
-      toast.success(renter ? (renter.isActive ? 'Renter updated!' : 'New tenant created with fresh data!') : 'Renter added!');
+      toast.success(renter ? (renter.isActive ? 'Renter updated!' : 'Tenant restored as active!') : 'Renter added!');
       onSuccess();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Something went wrong');
@@ -177,11 +177,13 @@ export default function RenterForm({ renter, onSuccess, onClose }) {
 
       {/* Restore notice for left renters */}
       {renter && !renter.isActive && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
-          <span className="text-xl">🆕</span>
-          <div>
-            <p className="text-xs font-bold text-amber-700">This tenant is marked as Left</p>
-            <p className="text-xs text-amber-600 mt-0.5">Saving will create a <strong>new tenant record</strong> with fresh data. Old history stays archived for admin.</p>
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🔄</span>
+            <div>
+              <p className="text-xs font-bold text-amber-700">This tenant is marked as Left</p>
+              <p className="text-xs text-amber-600 mt-0.5">Update details above and click <strong>Restore & Save</strong> to make them active again with fresh data.</p>
+            </div>
           </div>
         </div>
       )}
@@ -238,7 +240,7 @@ export default function RenterForm({ renter, onSuccess, onClose }) {
               </svg>
               Saving...
             </span>
-          ) : renter ? '✅ Update Renter' : '➕ Add Renter'}
+          ) : renter ? (renter.isActive ? '✅ Update Renter' : '🔄 Restore & Save') : '➕ Add Renter'}
         </button>
         <button type="button" className="btn-secondary flex-1" onClick={onClose}>Cancel</button>
       </div>

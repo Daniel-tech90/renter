@@ -51,12 +51,17 @@ exports.update = async (req, res) => {
 
     const { password, ...rest } = req.body;
 
-    // If name changed → new tenant in same room → increment cycle to isolate data
+    // If name changed on an active renter → increment cycle to isolate data
     const nameChanged = rest.name && rest.name.trim() !== renter.name.trim();
-    if (nameChanged) renter.tenantCycle = (renter.tenantCycle || 1) + 1;
+    if (nameChanged && renter.isActive) renter.tenantCycle = (renter.tenantCycle || 1) + 1;
 
-    // Restore if was marked left
-    if (!renter.isActive) { renter.isActive = true; renter.leftAt = null; }
+    // Always restore if was marked left
+    if (!renter.isActive) {
+      renter.isActive = true;
+      renter.leftAt = null;
+      // Increment cycle so new session starts fresh
+      renter.tenantCycle = (renter.tenantCycle || 1) + 1;
+    }
 
     Object.assign(renter, rest);
     if (password && password.trim()) renter.password = password.trim();
