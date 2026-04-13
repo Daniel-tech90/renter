@@ -116,6 +116,9 @@ export default function Renters() {
                 <button onClick={() => openEdit(r)} className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs min-h-[36px] min-w-[36px]">
                   ✏️ Edit
                 </button>
+                <button onClick={() => handleDelete(r._id, r.name)} className="btn-ghost bg-red-50 text-red-500 hover:bg-red-100 text-xs min-h-[36px] min-w-[36px]">
+                  🗑️
+                </button>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-slate-50">
                 {r.roomNumber ? (
@@ -200,9 +203,14 @@ export default function Renters() {
                     </span>
                   </td>
                   <td className="table-cell">
-                    <button onClick={() => openEdit(r)} className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100">
-                      ✏️ Edit
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => openEdit(r)} className="btn-ghost bg-indigo-50 text-indigo-600 hover:bg-indigo-100">
+                        ✏️ Edit
+                      </button>
+                      <button onClick={() => handleDelete(r._id, r.name)} className="btn-ghost bg-red-50 text-red-500 hover:bg-red-100">
+                        🗑️ Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
