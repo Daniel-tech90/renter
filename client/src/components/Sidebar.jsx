@@ -72,8 +72,7 @@ function SidebarContent({ expanded, admin, onLogout, onNavClick }) {
             )}
           </NavLink>
         ))}
-      </nav>
-      <div className="p-2 border-t border-white/10">
+        {/* Logout — right below History */}
         <button
           onClick={onLogout}
           className="w-full flex items-center gap-3 px-3 py-3 text-slate-400 hover:text-white hover:bg-red-500/10 rounded-2xl transition-all duration-200 group min-h-[48px]"
@@ -81,7 +80,8 @@ function SidebarContent({ expanded, admin, onLogout, onNavClick }) {
           <span className="text-xl flex-shrink-0 group-hover:scale-110 transition-transform duration-200">🚪</span>
           {expanded && <span className="text-sm font-semibold whitespace-nowrap">Logout</span>}
         </button>
-      </div>
+      </nav>
+      <div className="p-2 border-t border-white/10" />
     </>
   );
 }
@@ -142,8 +142,7 @@ export default function Sidebar({ onHoverChange, mobileOpen, onMobileClose }) {
               <span className="text-sm font-semibold">{label}</span>
             </NavLink>
           ))}
-        </nav>
-        <div className="p-2 border-t border-white/10">
+          {/* Logout — right below History */}
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-3.5 text-slate-400 hover:text-white hover:bg-red-500/10 rounded-2xl transition-all min-h-[52px]"
@@ -151,7 +150,8 @@ export default function Sidebar({ onHoverChange, mobileOpen, onMobileClose }) {
             <span className="text-xl">🚪</span>
             <span className="text-sm font-semibold">Logout</span>
           </button>
-        </div>
+        </nav>
+        <div className="border-t border-white/10" />
       </aside>
 
       {/* Desktop sidebar */}
