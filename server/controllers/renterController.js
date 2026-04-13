@@ -49,7 +49,7 @@ exports.update = async (req, res) => {
     const renter = await Renter.findOne({ _id: req.params.id, adminId: req.adminId });
     if (!renter) return res.status(404).json({ message: 'Renter not found' });
 
-    const { password, ...rest } = req.body;
+    const { password, isActive, leftAt, tenantCycle, adminId, role, ...rest } = req.body;
 
     // If name changed on an active renter → increment cycle to isolate data
     const nameChanged = rest.name && rest.name.trim() !== renter.name.trim();
@@ -59,7 +59,6 @@ exports.update = async (req, res) => {
     if (!renter.isActive) {
       renter.isActive = true;
       renter.leftAt = null;
-      // Increment cycle so new session starts fresh
       renter.tenantCycle = (renter.tenantCycle || 1) + 1;
     }
 

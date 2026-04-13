@@ -38,6 +38,12 @@ export default function RenterForm({ renter, onSuccess, onClose }) {
     try {
       const payload = { ...form };
       if (renter && !payload.password) delete payload.password;
+      // Never send isActive/leftAt from form — backend controls these
+      delete payload.isActive;
+      delete payload.leftAt;
+      delete payload.tenantCycle;
+      delete payload._id;
+      delete payload.__v;
       let saved;
       if (renter) {
         const { data } = await renterService.update(renter._id, payload);
