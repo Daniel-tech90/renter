@@ -7,6 +7,7 @@ const links = [
   { to: '/renters', label: 'Renters', icon: '👥' },
   { to: '/payments', label: 'Payments', icon: '💰' },
   { to: '/yearly-summary', label: 'Summary', icon: '📅' },
+  { to: '/room-history', label: 'Rooms', icon: '🏠' },
   { to: '/history', label: 'History', icon: '🕓' },
 ];
 
