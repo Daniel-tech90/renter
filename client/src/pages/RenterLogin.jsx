@@ -41,7 +41,7 @@ export default function RenterLogin() {
       <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 z-10">
         <div className="text-center text-white">
           <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl border border-white/20 overflow-hidden">
-            <img src="/photo.jpg" alt="Ramesh Sahu" className="w-full h-full object-cover" />
+            <img src="/photo.jpg" alt="Ramesh" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-5xl font-bold mb-4 leading-tight drop-shadow-lg">
             Tenant<br /><span className="text-emerald-300">Portal</span>
@@ -63,7 +63,7 @@ export default function RenterLogin() {
         <div className="w-full max-w-md">
           <div className="lg:hidden text-center mb-8">
             <div className="w-20 h-20 rounded-2xl mx-auto mb-3 overflow-hidden border-4 border-white/30 shadow-lg">
-              <img src="/photo.jpg" alt="Ramesh Sahu" className="w-full h-full object-cover" />
+              <img src="/photo.jpg" alt="Ramesh" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-2xl font-bold text-white">Tenant Portal</h1>
           </div>

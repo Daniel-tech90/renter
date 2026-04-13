@@ -59,7 +59,7 @@ export default function Login() {
       <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 z-10">
         <div className="text-center text-white">
           <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl border border-white/20 overflow-hidden">
-            <img src="/photo.jpg" alt="Ramesh Sahu" className="w-full h-full object-cover" />
+            <img src="/photo.jpg" alt="Ramesh" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-5xl font-bold mb-4 leading-tight drop-shadow-lg">
             <span className="font-extrabold bg-gradient-to-r from-yellow-300 via-orange-300 to-pink-300 bg-clip-text text-transparent">Ramesh</span><br />
@@ -93,9 +93,9 @@ export default function Login() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-6">
             <div className="w-16 h-16 rounded-2xl mx-auto mb-2 overflow-hidden border-4 border-white/30 shadow-lg">
-              <img src="/photo.jpg" alt="Ramesh Sahu" className="w-full h-full object-cover" />
+              <img src="/photo.jpg" alt="Ramesh" className="w-full h-full object-cover" />
             </div>
-            <h1 className="text-xl font-bold text-white">Ramesh Sahu Rental Portal</h1>
+            <h1 className="text-xl font-bold text-white">Ramesh Rental Portal</h1>
           </div>
 
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">

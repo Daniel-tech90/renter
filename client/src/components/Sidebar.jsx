@@ -23,7 +23,7 @@ function SidebarContent({ expanded, admin, onLogout, onNavClick }) {
           </div>
           {expanded && (
             <div className="min-w-0">
-              <h1 className="text-sm font-bold tracking-tight whitespace-nowrap">Ramesh Sahu</h1>
+              <h1 className="text-sm font-bold tracking-tight whitespace-nowrap">Ramesh</h1>
               <p className="text-slate-400 text-xs whitespace-nowrap">Rental Portal</p>
             </div>
           )}
@@ -115,7 +115,7 @@ export default function Sidebar({ onHoverChange, mobileOpen, onMobileClose }) {
               <img src="/photo.jpg" alt="logo" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="text-sm font-bold">Ramesh Sahu</h1>
+              <h1 className="text-sm font-bold">Ramesh</h1>
               <p className="text-slate-400 text-xs">Rental Portal</p>
             </div>
           </div>

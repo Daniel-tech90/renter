@@ -217,7 +217,7 @@ Your bill for *${bill.month}* is ready.
 🔖 Status: ${bill.status}
 
 Please pay before the due date. Thank you! 🙏
-- Ramesh Sahu`
+- Ramesh`
     );
     // Try Twilio first
     setSending(bill._id);
