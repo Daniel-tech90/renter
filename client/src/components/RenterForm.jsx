@@ -49,7 +49,7 @@ export default function RenterForm({ renter, onSuccess, onClose }) {
       if (govtIdFile && saved?._id) {
         await renterService.uploadGovtId(saved._id, govtIdFile);
       }
-      toast.success(renter ? 'Renter updated!' : 'Renter added!');
+      toast.success(renter ? (renter.isActive ? 'Renter updated!' : 'New tenant created with fresh data!') : 'Renter added!');
       onSuccess();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Something went wrong');
@@ -178,10 +178,10 @@ export default function RenterForm({ renter, onSuccess, onClose }) {
       {/* Restore notice for left renters */}
       {renter && !renter.isActive && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
-          <span className="text-xl">🔄</span>
+          <span className="text-xl">🆕</span>
           <div>
             <p className="text-xs font-bold text-amber-700">This tenant is marked as Left</p>
-            <p className="text-xs text-amber-600 mt-0.5">Saving this form will restore them as an active tenant.</p>
+            <p className="text-xs text-amber-600 mt-0.5">Saving will create a <strong>new tenant record</strong> with fresh data. Old history stays archived for admin.</p>
           </div>
         </div>
       )}
