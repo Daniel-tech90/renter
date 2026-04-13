@@ -174,20 +174,20 @@ export default function AnnualIncome() {
           <div className="overflow-x-auto">
             <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px' }}>
               <thead>
-                <tr style={{ background: '#f1f5f9' }}>
-                  <th style={{ border: '1px solid #cbd5e1', padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#475569', position: 'sticky', left: 0, background: '#e2e8f0', zIndex: 20, minWidth: '150px', whiteSpace: 'nowrap' }}>
+                <tr style={{ background: '#e2e8f0' }}>
+                  <th style={{ border: '1.5px solid #94a3b8', padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: '#475569', position: 'sticky', left: 0, background: '#cbd5e1', zIndex: 20, minWidth: '150px', whiteSpace: 'nowrap' }}>
                     Tenant
                   </th>
                   {MONTHS.map((m, i) => {
                     const isCurrent = year === CURRENT_YEAR && i === CURRENT_MONTH;
                     return (
                       <th key={m} style={{
-                        border: '1px solid #cbd5e1',
+                        border: '1.5px solid #94a3b8',
                         padding: '8px 6px',
                         textAlign: 'center',
                         fontWeight: 700,
                         color: isCurrent ? '#4f46e5' : '#475569',
-                        background: isCurrent ? '#e0e7ff' : '#f1f5f9',
+                        background: isCurrent ? '#c7d2fe' : '#e2e8f0',
                         minWidth: '70px',
                         whiteSpace: 'nowrap',
                       }}>
@@ -196,7 +196,7 @@ export default function AnnualIncome() {
                       </th>
                     );
                   })}
-                  <th style={{ border: '1px solid #cbd5e1', padding: '8px 10px', textAlign: 'right', fontWeight: 700, color: '#475569', background: '#e2e8f0', minWidth: '90px', whiteSpace: 'nowrap' }}>
+                  <th style={{ border: '1.5px solid #94a3b8', padding: '8px 10px', textAlign: 'right', fontWeight: 700, color: '#475569', background: '#cbd5e1', minWidth: '90px', whiteSpace: 'nowrap' }}>
                     Total
                   </th>
                 </tr>
@@ -212,7 +212,7 @@ export default function AnnualIncome() {
                     >
                       {/* Tenant name cell */}
                       <td style={{
-                        border: '1px solid #cbd5e1',
+                        border: '1.5px solid #94a3b8',
                         padding: '7px 12px',
                         fontWeight: 600,
                         color: '#334155',
@@ -221,7 +221,7 @@ export default function AnnualIncome() {
                         background: isEven ? '#ffffff' : '#f8fafc',
                         zIndex: 10,
                         whiteSpace: 'nowrap',
-                        borderRight: '2px solid #94a3b8',
+                        borderRight: '2.5px solid #64748b',
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{
@@ -263,8 +263,8 @@ export default function AnnualIncome() {
                         }
                         return (
                           <td key={i} style={{
-                            border: '1px solid #e2e8f0',
-                            borderLeft: i === 0 ? '1px solid #e2e8f0' : '1px solid #e2e8f0',
+                            border: '1.5px solid #94a3b8',
+                            borderLeft: i === 0 ? '1.5px solid #94a3b8' : '1.5px solid #94a3b8',
                             padding: '6px 4px',
                             textAlign: 'center',
                             background: bg,
@@ -277,8 +277,8 @@ export default function AnnualIncome() {
 
                       {/* Row total */}
                       <td style={{
-                        border: '1px solid #cbd5e1',
-                        borderLeft: '2px solid #94a3b8',
+                        border: '1.5px solid #94a3b8',
+                        borderLeft: '2.5px solid #64748b',
                         padding: '7px 10px',
                         textAlign: 'right',
                         fontWeight: 700,
@@ -295,15 +295,15 @@ export default function AnnualIncome() {
                 {/* Monthly totals row */}
                 <tr style={{ background: '#f1f5f9', borderTop: '2px solid #94a3b8' }}>
                   <td style={{
-                    border: '1px solid #cbd5e1',
+                    border: '1.5px solid #94a3b8',
                     padding: '8px 12px',
                     fontWeight: 700,
                     color: '#334155',
                     position: 'sticky',
                     left: 0,
-                    background: '#e2e8f0',
+                    background: '#cbd5e1',
                     zIndex: 10,
-                    borderRight: '2px solid #94a3b8',
+                    borderRight: '2.5px solid #64748b',
                     fontSize: '11px',
                   }}>
                     📊 Monthly Total
@@ -312,13 +312,13 @@ export default function AnnualIncome() {
                     const isCurrent = year === CURRENT_YEAR && i === CURRENT_MONTH;
                     return (
                       <td key={i} style={{
-                        border: '1px solid #cbd5e1',
+                        border: '1.5px solid #94a3b8',
                         padding: '8px 4px',
                         textAlign: 'center',
                         fontWeight: 700,
                         fontSize: '11px',
                         color: v > 0 ? '#15803d' : '#94a3b8',
-                        background: isCurrent ? '#e0e7ff' : '#f1f5f9',
+                        background: isCurrent ? '#c7d2fe' : '#e2e8f0',
                       }}>
                         {v > 0 ? fmt(v) : '—'}
                       </td>
