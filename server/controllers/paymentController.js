@@ -118,7 +118,10 @@ exports.create = async (req, res) => {
     const unitsConsumed = Math.max(0, Number(currReading) - Number(prevReading));
     const electricityBill = unitsConsumed * Number(ratePerUnit);
     const totalAmount = Number(amount) + electricityBill;
-    const payment = await Payment.create({ ...req.body, unitsConsumed, electricityBill, totalAmount, adminId: req.adminId });
+    // Get current tenantCycle from renter
+    const renter = await Renter.findById(req.body.renterId);
+    const tenantCycle = renter?.tenantCycle || 1;
+    const payment = await Payment.create({ ...req.body, unitsConsumed, electricityBill, totalAmount, tenantCycle, adminId: req.adminId });
     await payment.populate('renterId', 'name roomNumber phone');
     if (payment.status === 'Paid') {
       await sendWhatsApp(

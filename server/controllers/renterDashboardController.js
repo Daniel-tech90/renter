@@ -7,7 +7,8 @@ exports.getDashboard = async (req, res) => {
     const renter = await Renter.findOne({ _id: req.user.id, isActive: true }).select('-password');
     if (!renter) return res.status(403).json({ message: 'Account is no longer active. Please contact admin.' });
 
-    const payments = await Payment.find({ renterId: req.user.id });
+    const currentCycle = renter.tenantCycle || 1;
+    const payments = await Payment.find({ renterId: req.user.id, tenantCycle: currentCycle });
 
     const paidPayments    = payments.filter(p => p.status === 'Paid');
     const pendingPayments = payments.filter(p => p.status === 'Pending');
@@ -42,7 +43,9 @@ exports.getDashboard = async (req, res) => {
 // GET /api/renter/payments
 exports.getPayments = async (req, res) => {
   try {
-    const payments = await Payment.find({ renterId: req.user.id }).sort({ month: -1 });
+    const renter = await Renter.findById(req.user.id).select('tenantCycle');
+    const currentCycle = renter?.tenantCycle || 1;
+    const payments = await Payment.find({ renterId: req.user.id, tenantCycle: currentCycle }).sort({ month: -1 });
     res.json(payments);
   } catch (err) {
     res.status(500).json({ message: err.message });

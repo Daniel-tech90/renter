@@ -49,17 +49,15 @@ exports.update = async (req, res) => {
     const renter = await Renter.findOne({ _id: req.params.id, adminId: req.adminId });
     if (!renter) return res.status(404).json({ message: 'Renter not found' });
 
-    // If renter was marked as left, create a NEW renter instead of restoring old one
-    // This ensures complete data isolation — old payment history stays with old renter ID
-    if (!renter.isActive) {
-      const { password, ...rest } = req.body;
-      const newRenter = new Renter({ ...rest, adminId: req.adminId, isActive: true, leftAt: null });
-      if (password && password.trim()) newRenter.password = password.trim();
-      await newRenter.save();
-      return res.json({ ...newRenter.toObject(), _newId: true });
-    }
-
     const { password, ...rest } = req.body;
+
+    // If name changed → new tenant in same room → increment cycle to isolate data
+    const nameChanged = rest.name && rest.name.trim() !== renter.name.trim();
+    if (nameChanged) renter.tenantCycle = (renter.tenantCycle || 1) + 1;
+
+    // Restore if was marked left
+    if (!renter.isActive) { renter.isActive = true; renter.leftAt = null; }
+
     Object.assign(renter, rest);
     if (password && password.trim()) renter.password = password.trim();
     await renter.save();

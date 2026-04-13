@@ -14,6 +14,7 @@ const renterSchema = new mongoose.Schema({
   govtIdDocUrl: { type: String },
   isActive: { type: Boolean, default: true },
   leftAt: { type: Date },
+  tenantCycle: { type: Number, default: 1 },
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
   role: { type: String, default: 'renter' },
 }, { timestamps: true });

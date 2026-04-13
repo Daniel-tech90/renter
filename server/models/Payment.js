@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const paymentSchema = new mongoose.Schema({
   renterId: { type: mongoose.Schema.Types.ObjectId, ref: 'Renter', required: true },
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
+  tenantCycle: { type: Number, default: 1 },
   month: { type: String, required: true },
   amount: { type: Number, required: true },
   prevReading: { type: Number, default: 0 },
@@ -19,7 +20,7 @@ const paymentSchema = new mongoose.Schema({
   approvedAt: { type: Date },
 }, { timestamps: true });
 
-// Prevent duplicate payment records per renter per month
-paymentSchema.index({ renterId: 1, month: 1 }, { unique: true });
+// Prevent duplicate payment records per renter per month per cycle
+paymentSchema.index({ renterId: 1, month: 1, tenantCycle: 1 }, { unique: true });
 
 module.exports = mongoose.model('Payment', paymentSchema);
