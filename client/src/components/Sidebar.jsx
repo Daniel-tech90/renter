@@ -6,6 +6,7 @@ const links = [
   { to: '/', label: 'Dashboard', icon: '📊' },
   { to: '/renters', label: 'Renters', icon: '👥' },
   { to: '/payments', label: 'Payments', icon: '💰' },
+  { to: '/annual-income', label: 'Income', icon: '💵' },
   { to: '/yearly-summary', label: 'Summary', icon: '📅' },
   { to: '/room-history', label: 'Rooms', icon: '🏠' },
   { to: '/history', label: 'History', icon: '🕓' },

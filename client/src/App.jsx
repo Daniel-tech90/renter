@@ -10,6 +10,7 @@ import Payments from './pages/Payments';
 import History from './pages/History';
 import TenantDetails from './pages/TenantDetails';
 import YearlySummary from './pages/YearlySummary';
+import AnnualIncome from './pages/AnnualIncome';
 import RoomHistory from './pages/RoomHistory';
 import RenterDashboard from './pages/RenterDashboard';
 
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="history" element={<History />} />
             <Route path="room-history" element={<RoomHistory />} />
             <Route path="yearly-summary" element={<YearlySummary />} />
+            <Route path="annual-income" element={<AnnualIncome />} />
             <Route path="tenant/:id" element={<TenantDetails />} />
           </Route>
           <Route path="/renter/dashboard" element={<RenterDashboard />} />
