@@ -385,9 +385,7 @@ exports.generateBill = async (req, res) => {
         doc.fillColor('#2563eb').fontSize(9).font('Helvetica-Bold').text(INR(payment.advanceAdded), 200, y); y += 16;
       }
       if (payment.advanceUsed > 0) {
-        const remainingAdv = (payment.renterId.advanceBalance !== undefined)
-          ? payment.renterId.advanceBalance
-          : 0;
+        const remainingAdv = payment.renterId.advanceBalance || 0;
         doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Advance Used', 50, y);
         doc.fillColor('#16a34a').fontSize(9).font('Helvetica-Bold').text(`- ${INR(payment.advanceUsed)}`, 200, y); y += 16;
         doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Remaining Advance', 50, y);
@@ -396,6 +394,16 @@ exports.generateBill = async (req, res) => {
         doc.fillColor(payment.amountPaid === 0 ? '#16a34a' : '#dc2626').fontSize(9).font('Helvetica-Bold')
           .text(payment.amountPaid === 0 ? '\u20b90 (Fully Covered)' : INR(payment.amountPaid), 200, y); y += 16;
       }
+    }
+
+    // Current Advance Balance Box
+    const currentAdvBalance = payment.renterId.advanceBalance || 0;
+    if (currentAdvBalance > 0 || payment.advanceUsed > 0) {
+      div(y + 8); y += 16;
+      doc.rect(50, y, 495, 36).fill('#eff6ff').stroke('#bfdbfe');
+      doc.fillColor('#1d4ed8').fontSize(10).font('Helvetica-Bold')
+        .text(`Current Advance Balance in Account: ${INR(currentAdvBalance)}`, 50, y + 11, { align: 'center', width: 495 });
+      y += 36;
     }
 
     if (payment.paymentDate) {
@@ -514,6 +522,15 @@ exports.generateReceipt = async (req, res) => {
       doc.fillColor('#2563eb').fontSize(10).font('Helvetica')
          .text(`Advance Used: \u20b9${payment.advanceUsed.toLocaleString()} | Paid: \u20b9${(payment.amountPaid || 0).toLocaleString()}`, 50, y + 30, { align: 'center', width: 495 });
     }
+
+    // ── Current Advance Balance ─────────────────────────────────
+    const renterForBalance = await Renter.findById(r._id).select('advanceBalance');
+    const currentAdvBal = renterForBalance?.advanceBalance || 0;
+    y += 65;
+    doc.rect(50, y, 495, 36).fill('#eff6ff').stroke('#bfdbfe');
+    doc.fillColor('#1d4ed8').fontSize(10).font('Helvetica-Bold')
+       .text(`Current Advance Balance in Account: \u20b9${currentAdvBal.toLocaleString('en-IN')}`, 50, y + 11, { align: 'center', width: 495 });
+    y += 36;
 
     // ── Notes ──────────────────────────────────────────────────
     if (payment.notes) {
