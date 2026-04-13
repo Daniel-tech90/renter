@@ -114,11 +114,11 @@ export default function AnnualIncome() {
               <div key={m} className={`rounded-xl p-3 text-center border-2 transition-all ${
                 isCurrent ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-300' :
                 income > 0 ? 'border-emerald-400 bg-emerald-50' :
-                isPast ? 'border-red-300 bg-red-50/50' :
+                isPast ? 'border-red-500 bg-red-100' :
                 'border-slate-300 bg-slate-50'
               }`}>
-                <p className={`text-xs font-bold mb-1 ${isCurrent ? 'text-indigo-600' : 'text-slate-500'}`}>{m}</p>
-                <p className={`text-xs font-bold ${income > 0 ? 'text-emerald-700' : isPast ? 'text-red-400' : 'text-slate-300'}`}>
+                <p className={`text-xs font-bold mb-1 ${isCurrent ? 'text-indigo-600' : isPast && income === 0 ? 'text-red-600' : 'text-slate-500'}`}>{m}</p>
+                <p className={`text-xs font-bold ${income > 0 ? 'text-emerald-700' : isPast ? 'text-red-600 font-extrabold' : 'text-slate-300'}`}>
                   {income > 0 ? fmt(income) : isPast ? '₹0' : '—'}
                 </p>
               </div>
