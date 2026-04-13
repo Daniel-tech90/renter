@@ -88,15 +88,15 @@ export default function AnnualIncome() {
           <p className="text-3xl font-bold">{fmt(annualTotal)}</p>
           <p className="text-xs opacity-70 mt-1">{year} collected</p>
         </div>
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+        <div className="bg-white border-2 border-slate-300 rounded-2xl p-4 shadow-sm">
           <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Total Tenants</p>
           <p className="text-2xl font-bold text-slate-800">{summary.length}</p>
         </div>
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+        <div className="bg-white border-2 border-slate-300 rounded-2xl p-4 shadow-sm">
           <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Active Payers</p>
           <p className="text-2xl font-bold text-emerald-600">{paidTenants}</p>
         </div>
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+        <div className="bg-white border-2 border-slate-300 rounded-2xl p-4 shadow-sm">
           <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Has Dues</p>
           <p className="text-2xl font-bold text-red-500">{pendingCount}</p>
         </div>
@@ -111,11 +111,11 @@ export default function AnnualIncome() {
             const isCurrent = year === CURRENT_YEAR && i === CURRENT_MONTH;
             const isPast = year < CURRENT_YEAR || (year === CURRENT_YEAR && i < CURRENT_MONTH);
             return (
-              <div key={m} className={`rounded-xl p-3 text-center border transition-all ${
-                isCurrent ? 'border-indigo-400 bg-indigo-50 ring-2 ring-indigo-200' :
-                income > 0 ? 'border-emerald-200 bg-emerald-50' :
-                isPast ? 'border-red-100 bg-red-50/50' :
-                'border-slate-100 bg-slate-50'
+              <div key={m} className={`rounded-xl p-3 text-center border-2 transition-all ${
+                isCurrent ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-300' :
+                income > 0 ? 'border-emerald-400 bg-emerald-50' :
+                isPast ? 'border-red-300 bg-red-50/50' :
+                'border-slate-300 bg-slate-50'
               }`}>
                 <p className={`text-xs font-bold mb-1 ${isCurrent ? 'text-indigo-600' : 'text-slate-500'}`}>{m}</p>
                 <p className={`text-xs font-bold ${income > 0 ? 'text-emerald-700' : isPast ? 'text-red-400' : 'text-slate-300'}`}>
@@ -325,8 +325,8 @@ export default function AnnualIncome() {
                     );
                   })}
                   <td style={{
-                    border: '1px solid #cbd5e1',
-                    borderLeft: '2px solid #94a3b8',
+                    border: '1.5px solid #94a3b8',
+                    borderLeft: '2.5px solid #64748b',
                     padding: '8px 10px',
                     textAlign: 'right',
                     fontWeight: 800,
@@ -356,7 +356,7 @@ export default function AnnualIncome() {
               const paidMonths = MONTHS.filter((_, i) => cellStatus(t.renter._id, i) === 'paid');
               const pct = Math.round((t.monthsPaid / 12) * 100);
               return (
-                <div key={t.renter._id} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <div key={t.renter._id} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-slate-50 rounded-2xl p-4 border-2 border-slate-300">
                   <div className="flex items-center gap-3 min-w-[160px]">
                     <div className="w-9 h-9 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-xs font-bold text-violet-600 flex-shrink-0">
                       {t.renter.name.slice(0,2).toUpperCase()}
