@@ -130,30 +130,31 @@ exports.create = async (req, res) => {
     let status = req.body.status || 'Pending';
 
     if (isAdvance && Number(advanceAmount) > 0) {
-      // Pure advance payment — add to balance
+      // Pure advance payment — add to balance only
       advanceAdded = Number(advanceAmount);
       advanceBalance += advanceAdded;
       await Renter.findByIdAndUpdate(req.body.renterId, { advanceBalance });
       amountPaid = 0;
       status = 'Pending';
-    } else if (status === 'Paid' || advanceBalance > 0) {
-      // Try to use advance balance
+    } else {
+      // Normal payment — always try to use advance balance first
       if (advanceBalance >= totalAmount) {
+        // Advance fully covers the bill
         advanceUsed = totalAmount;
         advanceBalance -= totalAmount;
         amountPaid = 0;
         status = 'Paid';
       } else if (advanceBalance > 0) {
+        // Advance partially covers the bill
         advanceUsed = advanceBalance;
         amountPaid = totalAmount - advanceBalance;
         advanceBalance = 0;
         status = status === 'Paid' ? 'Paid' : 'Partial';
       } else {
+        // No advance — normal payment
         amountPaid = totalAmount;
       }
       await Renter.findByIdAndUpdate(req.body.renterId, { advanceBalance });
-    } else {
-      amountPaid = totalAmount;
     }
 
     const payment = await Payment.create({
@@ -304,6 +305,9 @@ exports.generateBill = async (req, res) => {
     const payment = await Payment.findById(req.params.id).populate('renterId');
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
     const r = payment.renterId;
+    // Get current advance balance from renter
+    const renterData = await Renter.findById(r._id).select('advanceBalance');
+    payment.renterId.advanceBalance = renterData?.advanceBalance || 0;
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=bill-${payment._id}.pdf`);
@@ -381,10 +385,16 @@ exports.generateBill = async (req, res) => {
         doc.fillColor('#2563eb').fontSize(9).font('Helvetica-Bold').text(INR(payment.advanceAdded), 200, y); y += 16;
       }
       if (payment.advanceUsed > 0) {
+        const remainingAdv = (payment.renterId.advanceBalance !== undefined)
+          ? payment.renterId.advanceBalance
+          : 0;
         doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Advance Used', 50, y);
         doc.fillColor('#16a34a').fontSize(9).font('Helvetica-Bold').text(`- ${INR(payment.advanceUsed)}`, 200, y); y += 16;
-        doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Amount to Pay', 50, y);
-        doc.fillColor('#dc2626').fontSize(9).font('Helvetica-Bold').text(INR(payment.amountPaid), 200, y); y += 16;
+        doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Remaining Advance', 50, y);
+        doc.fillColor('#2563eb').fontSize(9).font('Helvetica-Bold').text(INR(remainingAdv), 200, y); y += 16;
+        doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Amount Payable', 50, y);
+        doc.fillColor(payment.amountPaid === 0 ? '#16a34a' : '#dc2626').fontSize(9).font('Helvetica-Bold')
+          .text(payment.amountPaid === 0 ? '\u20b90 (Fully Covered)' : INR(payment.amountPaid), 200, y); y += 16;
       }
     }
 
@@ -394,11 +404,17 @@ exports.generateBill = async (req, res) => {
       doc.fillColor('#1e293b').fontSize(9).font('Helvetica-Bold').text(new Date(payment.paymentDate).toDateString(), 200, y); y += 16;
     }
 
-    // Total Box
+    // Total Box — show amount payable (0 if fully covered by advance)
     y += 12;
-    doc.rect(50, y, 495, 48).fill('#EEF2FF').stroke('#C7D2FE');
-    doc.fillColor('#4338CA').fontSize(15).font('Helvetica-Bold')
-      .text(`TOTAL AMOUNT : ${INR(payment.totalAmount)}`, 50, y + 15, { align: 'center', width: 495 });
+    const payable = payment.amountPaid || 0;
+    doc.rect(50, y, 495, 48).fill(payable === 0 ? '#f0fdf4' : '#EEF2FF').stroke(payable === 0 ? '#bbf7d0' : '#C7D2FE');
+    doc.fillColor(payable === 0 ? '#15803d' : '#4338CA').fontSize(15).font('Helvetica-Bold')
+      .text(
+        payable === 0
+          ? `TOTAL PAYABLE : \u20b90  (Covered by Advance)`
+          : `TOTAL PAYABLE : ${INR(payable)}`,
+        50, y + 15, { align: 'center', width: 495 }
+      );
 
     // Footer
     doc.rect(0, 780, 595, 62).fill('#f8fafc');
