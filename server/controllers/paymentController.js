@@ -319,8 +319,11 @@ exports.generateBill = async (req, res) => {
 
     // Status badge
     const isPaid = payment.status === 'Paid';
-    doc.rect(400, 112, 145, 34).fill(isPaid ? '#f0fdf4' : '#fef2f2').stroke(isPaid ? '#bbf7d0' : '#fecaca');
-    doc.fillColor(isPaid ? '#16a34a' : '#dc2626').fontSize(12).font('Helvetica-Bold')
+    const statusColor = isPaid ? '#16a34a' : payment.status === 'Partial' ? '#d97706' : '#dc2626';
+    const statusBg = isPaid ? '#f0fdf4' : payment.status === 'Partial' ? '#fffbeb' : '#fef2f2';
+    const statusBorder = isPaid ? '#bbf7d0' : payment.status === 'Partial' ? '#fde68a' : '#fecaca';
+    doc.rect(400, 112, 145, 34).fill(statusBg).stroke(statusBorder);
+    doc.fillColor(statusColor).fontSize(12).font('Helvetica-Bold')
       .text(payment.status.toUpperCase(), 400, 122, { width: 145, align: 'center' });
 
     // Meta
@@ -362,12 +365,34 @@ exports.generateBill = async (req, res) => {
     doc.fillColor('#4F46E5').fontSize(11).font('Helvetica-Bold').text('BILL BREAKDOWN', 50, y); y += 18;
     [['Rent Amount', INR(payment.amount)],
      ['Electricity Bill', INR(payment.electricityBill)],
-     ['Payment Date', payment.paymentDate ? new Date(payment.paymentDate).toDateString() : 'Not paid yet'],
+     ['Total Due', INR(payment.totalAmount)],
     ].forEach(([l, v]) => {
       doc.fillColor('#64748b').fontSize(9).font('Helvetica').text(l, 50, y);
       doc.fillColor('#1e293b').fontSize(9).font('Helvetica-Bold').text(v, 200, y);
       y += 16;
     });
+
+    // Advance section if applicable
+    if (payment.advanceUsed > 0 || payment.advanceAdded > 0) {
+      div(y + 8); y += 22;
+      doc.fillColor('#2563eb').fontSize(11).font('Helvetica-Bold').text('ADVANCE DETAILS', 50, y); y += 18;
+      if (payment.advanceAdded > 0) {
+        doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Advance Added', 50, y);
+        doc.fillColor('#2563eb').fontSize(9).font('Helvetica-Bold').text(INR(payment.advanceAdded), 200, y); y += 16;
+      }
+      if (payment.advanceUsed > 0) {
+        doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Advance Used', 50, y);
+        doc.fillColor('#16a34a').fontSize(9).font('Helvetica-Bold').text(`- ${INR(payment.advanceUsed)}`, 200, y); y += 16;
+        doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Amount to Pay', 50, y);
+        doc.fillColor('#dc2626').fontSize(9).font('Helvetica-Bold').text(INR(payment.amountPaid), 200, y); y += 16;
+      }
+    }
+
+    if (payment.paymentDate) {
+      y += 4;
+      doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Payment Date', 50, y);
+      doc.fillColor('#1e293b').fontSize(9).font('Helvetica-Bold').text(new Date(payment.paymentDate).toDateString(), 200, y); y += 16;
+    }
 
     // Total Box
     y += 12;
@@ -441,19 +466,26 @@ exports.generateReceipt = async (req, res) => {
        .text('PAYMENT DETAILS', 50, y + 24);
 
     const paymentDetails = [
-      ['Month',        payment.month],
-      ['Amount Paid',  `\u20b9${payment.amount.toLocaleString()}`],
-      ['Status',       payment.status],
-      ['Payment Date', payment.paymentDate ? new Date(payment.paymentDate).toDateString() : 'N/A'],
-      ['Approved On',  payment.approvedAt ? new Date(payment.approvedAt).toDateString() : 'N/A'],
+      ['Month',            payment.month],
+      ['Rent Amount',      `\u20b9${payment.amount.toLocaleString()}`],
+      ['Electricity Bill', `\u20b9${(payment.electricityBill || 0).toLocaleString()}`],
+      ['Total Due',        `\u20b9${payment.totalAmount.toLocaleString()}`],
+      ['Advance Used',     payment.advanceUsed > 0 ? `- \u20b9${payment.advanceUsed.toLocaleString()}` : '\u2014'],
+      ['Amount Paid',      `\u20b9${(payment.amountPaid || payment.amount).toLocaleString()}`],
+      ['Status',           payment.status],
+      ['Payment Date',     payment.paymentDate ? new Date(payment.paymentDate).toDateString() : 'N/A'],
     ];
 
     y = y + 47;
     paymentDetails.forEach(([label, value]) => {
       doc.fillColor('#64748b').fontSize(10).font('Helvetica').text(label, 50, y);
       const isStatus = label === 'Status';
-      doc.fillColor(isStatus && value === 'Paid' ? '#16a34a' : '#1e293b')
-         .fontSize(10).font('Helvetica-Bold').text(value, 220, y);
+      const isAdvance = label === 'Advance Used' && payment.advanceUsed > 0;
+      doc.fillColor(
+        isStatus && value === 'Paid' ? '#16a34a' :
+        isAdvance ? '#2563eb' :
+        '#1e293b'
+      ).fontSize(10).font('Helvetica-Bold').text(value, 220, y);
       y += 20;
     });
 
@@ -461,7 +493,11 @@ exports.generateReceipt = async (req, res) => {
     y += 15;
     doc.rect(50, y, 495, 55).fill('#f0fdf4').stroke('#bbf7d0');
     doc.fillColor('#15803d').fontSize(14).font('Helvetica-Bold')
-       .text(`Total Amount Paid: \u20b9${payment.amount.toLocaleString()}`, 50, y + 18, { align: 'center', width: 495 });
+       .text(`Total Amount: \u20b9${payment.totalAmount.toLocaleString()}`, 50, y + 10, { align: 'center', width: 495 });
+    if (payment.advanceUsed > 0) {
+      doc.fillColor('#2563eb').fontSize(10).font('Helvetica')
+         .text(`Advance Used: \u20b9${payment.advanceUsed.toLocaleString()} | Paid: \u20b9${(payment.amountPaid || 0).toLocaleString()}`, 50, y + 30, { align: 'center', width: 495 });
+    }
 
     // ── Notes ──────────────────────────────────────────────────
     if (payment.notes) {
