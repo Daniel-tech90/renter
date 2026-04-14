@@ -190,11 +190,13 @@ exports.update = async (req, res) => {
     const totalAmount = Number(amount) + electricityBill;
 
     const prev = await Payment.findById(req.params.id);
-    const payment = await Payment.findByIdAndUpdate(
+    await Payment.findByIdAndUpdate(
       req.params.id,
       { ...req.body, unitsConsumed, electricityBill, totalAmount },
       { new: true, runValidators: true }
-    ).populate('renterId', 'name roomNumber phone');
+    );
+    // Fetch fresh with populate to ensure phone is available
+    const payment = await Payment.findById(req.params.id).populate('renterId', 'name roomNumber phone');
 
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
 
