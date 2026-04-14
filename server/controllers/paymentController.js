@@ -1,6 +1,13 @@
 const Payment = require('../models/Payment');
 const Renter = require('../models/Renter');
 const { sendWhatsApp } = require('../services/whatsappService');
+const { stopReminders } = require('../services/cronService');
+
+const fmtDateTime = (d = new Date()) => {
+  const date = d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+  return `${date} ${time}`;
+};
 const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
@@ -152,10 +159,10 @@ exports.create = async (req, res) => {
       await Renter.findByIdAndUpdate(req.body.renterId, { advanceBalance });
     }
 
-    // Auto-set paymentDate if fully covered by advance
-    const paymentDate = (status === 'Paid' && !req.body.paymentDate)
-      ? new Date()
-      : req.body.paymentDate || null;
+    // Auto-set paymentDate and paymentTime if fully covered by advance
+    const now = new Date();
+    const paymentDate = (status === 'Paid' && !req.body.paymentDate) ? now : req.body.paymentDate || null;
+    const paymentTime = (status === 'Paid') ? now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
 
     const payment = await Payment.create({
       ...req.body,
@@ -164,6 +171,7 @@ exports.create = async (req, res) => {
       remainingAdvance: advanceBalance,
       amountPaid, status,
       paymentDate,
+      paymentTime,
       adminId: req.adminId,
     });
     await payment.populate('renterId', 'name roomNumber phone advanceBalance');
@@ -190,15 +198,22 @@ exports.update = async (req, res) => {
     const totalAmount = Number(amount) + electricityBill;
 
     const prev = await Payment.findById(req.params.id);
+    const now = new Date();
+    const paymentTime = req.body.status === 'Paid'
+      ? now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+      : undefined;
     await Payment.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, unitsConsumed, electricityBill, totalAmount },
+      { ...req.body, unitsConsumed, electricityBill, totalAmount, ...(paymentTime && { paymentTime }) },
       { new: true, runValidators: true }
     );
     // Fetch fresh with populate to ensure phone is available
     const payment = await Payment.findById(req.params.id).populate('renterId', 'name roomNumber phone');
 
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
+
+    // Stop auto reminders if paid
+    if (payment.status === 'Paid') await stopReminders(payment._id);
 
     // Validate phone number
     const phone = payment.renterId?.phone;

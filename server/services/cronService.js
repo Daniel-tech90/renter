@@ -1,57 +1,109 @@
 const cron = require('node-cron');
-const Renter = require('../models/Renter');
+const Renter  = require('../models/Renter');
 const Payment = require('../models/Payment');
 const { sendWhatsApp } = require('./whatsappService');
 
 const getCurrentMonth = () => new Date().toISOString().slice(0, 7);
 
-const ensureMonthlyPayments = async () => {
-  const month = getCurrentMonth();
-  const renters = await Renter.find({ isActive: true });
-
-  for (const renter of renters) {
-    await Payment.findOneAndUpdate(
-      { renterId: renter._id, month },
-      { $setOnInsert: { renterId: renter._id, month, amount: renter.rentAmount, status: 'Pending' } },
-      { upsert: true, new: true }
-    );
-  }
-  console.log(`[Cron] Ensured payment records for ${renters.length} renters - ${month}`);
+const fmtDateTime = (d = new Date()) => {
+  const date = d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+  return `${date} ${time}`;
 };
 
-const sendDueReminders = async () => {
-  const today = new Date().getDate();
-  const month = getCurrentMonth();
+// ── Create pending payment records for all active renters ──────────────────
+const ensureMonthlyPayments = async () => {
+  const month   = getCurrentMonth();
+  const renters = await Renter.find({ isActive: true });
+  let created   = 0;
 
-  const pendingPayments = await Payment.find({ month, status: 'Pending' }).populate('renterId');
+  for (const renter of renters) {
+    const existing = await Payment.findOne({ renterId: renter._id, month });
+    if (!existing) {
+      await Payment.create({
+        renterId: renter._id,
+        adminId:  renter.adminId,
+        month,
+        amount:      renter.rentAmount,
+        totalAmount: renter.rentAmount,
+        status:      'Pending',
+        tenantCycle: renter.tenantCycle || 1,
+        autoReminderEnabled: true,
+        reminderCount: 0,
+      });
+      created++;
+    }
+  }
+  console.log(`[Cron] Monthly payments ensured for ${renters.length} renters (${created} new) - ${month}`);
+};
+
+// ── Send 3-day auto reminders for pending payments ─────────────────────────
+const sendAutoReminders = async () => {
+  const month = getCurrentMonth();
+  const now   = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  console.log(`[Cron] Checking pending payments for reminders - ${month}`);
+
+  const pendingPayments = await Payment.find({
+    month,
+    status: { $in: ['Pending', 'Partial'] },
+    autoReminderEnabled: { $ne: false },
+  }).populate('renterId');
+
+  console.log(`[Cron] Found ${pendingPayments.length} pending payments`);
 
   for (const payment of pendingPayments) {
     const renter = payment.renterId;
-    if (!renter || !renter.isActive) continue;
+    if (!renter || !renter.isActive || !renter.phone) {
+      console.log(`[Cron] Skipping - renter inactive or no phone`);
+      continue;
+    }
 
-    const isDueToday = renter.dueDate === today;
-    const isOverdue = renter.dueDate < today;
+    // Check if 3 days have passed since last reminder (or never sent)
+    const lastReminder = payment.lastReminderDate
+      ? new Date(payment.lastReminderDate.getFullYear(), payment.lastReminderDate.getMonth(), payment.lastReminderDate.getDate())
+      : null;
 
-    if (isDueToday || isOverdue) {
-      const msg = isDueToday
-        ? `⏰ Rent Due Today!\nDear ${renter.name}, your rent of ₹${payment.amount} for ${month} is due today. Please pay at your earliest convenience.`
-        : `🔴 Rent Overdue!\nDear ${renter.name}, your rent of ₹${payment.amount} for ${month} is overdue since the ${renter.dueDate}th. Please pay immediately.`;
+    const daysSinceLast = lastReminder
+      ? Math.floor((today - lastReminder) / (1000 * 60 * 60 * 24))
+      : 999;
 
+    if (daysSinceLast < 3) {
+      console.log(`[Cron] Skipping ${renter.name} - last reminder ${daysSinceLast} day(s) ago`);
+      continue;
+    }
+
+    const dateTime = fmtDateTime(now);
+    const msg = `⏰ Rent Reminder!\n\nHello ${renter.name}, this is a reminder for Room ${renter.roomNumber}.\nYour rent for *${month}* is still pending.\n\n📋 *Details:*\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total Due: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nPlease pay soon.\n📅 Date: ${dateTime.split(' ')[0]}\n🕐 Time: ${dateTime.split(' ')[1] + ' ' + dateTime.split(' ')[2]}\n\n- Ramesh Rental Portal`;
+
+    try {
       await sendWhatsApp(renter.phone, msg);
+      await Payment.findByIdAndUpdate(payment._id, {
+        lastReminderDate: now,
+        $inc: { reminderCount: 1 },
+      });
+      console.log(`[Cron] ✅ Reminder sent to ${renter.name} (${renter.phone}) | Count: ${payment.reminderCount + 1}`);
+    } catch (err) {
+      console.error(`[Cron] ❌ Reminder failed for ${renter.name}:`, err.message);
     }
   }
-  console.log(`[Cron] Sent reminders for ${pendingPayments.length} pending payments`);
+};
+
+// ── Stop reminders when payment is marked Paid ─────────────────────────────
+exports.stopReminders = async (paymentId) => {
+  await Payment.findByIdAndUpdate(paymentId, { autoReminderEnabled: false });
+  console.log(`[Cron] Reminders stopped for payment ${paymentId}`);
 };
 
 exports.startCronJobs = () => {
-  // Run daily at 9 AM
+  // Daily at 9 AM — check and send reminders
   cron.schedule('0 9 * * *', async () => {
-    console.log('[Cron] Running daily payment check...');
-    await ensureMonthlyPayments();
-    await sendDueReminders();
+    console.log('[Cron] Running daily reminder check...');
+    await sendAutoReminders();
   });
 
-  // Run on 1st of every month at midnight to create new payment records
+  // 1st of every month at midnight — create new payment records
   cron.schedule('0 0 1 * *', async () => {
     console.log('[Cron] Creating monthly payment records...');
     await ensureMonthlyPayments();
@@ -61,3 +113,4 @@ exports.startCronJobs = () => {
 };
 
 exports.ensureMonthlyPayments = ensureMonthlyPayments;
+exports.sendAutoReminders     = sendAutoReminders;
