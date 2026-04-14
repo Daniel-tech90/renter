@@ -212,18 +212,19 @@ exports.update = async (req, res) => {
     let whatsappError = null;
 
     try {
+      let msg;
       if (payment.status === 'Paid') {
-        // Send on every update when status is Paid (not just on change)
-        const msg = `✅ Payment ${statusChanged ? 'Confirmed' : 'Updated'}!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* has been ${statusChanged ? 'confirmed' : 'updated'}.\n\n📋 *Details:*\n• Room: ${payment.renterId.roomNumber}\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n• Status: ${payment.status}\n• Date: ${payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('en-IN') : 'N/A'}\n\nThank you! 🙏\n- Ramesh Rental Portal`;
-        await sendWhatsApp(phone, msg);
-        whatsappSent = true;
-        console.log('[WhatsApp] Sent to', phone, '| Tenant:', payment.renterId.name);
-      } else if (statusChanged && payment.status === 'Pending') {
-        const msg = `⏰ Payment Reminder!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* is pending.\n\n📋 *Details:*\n• Room: ${payment.renterId.roomNumber}\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total Due: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nPlease pay at your earliest convenience.\n- Ramesh Rental Portal`;
-        await sendWhatsApp(phone, msg);
-        whatsappSent = true;
-        console.log('[WhatsApp] Reminder sent to', phone, '| Tenant:', payment.renterId.name);
+        msg = `✅ Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* has been confirmed.\n\n📋 *Details:*\n• Room: ${payment.renterId.roomNumber}\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n• Date: ${payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('en-IN') : 'N/A'}\n\nThank you! 🙏\n- Ramesh Rental Portal`;
+      } else if (payment.status === 'Pending') {
+        msg = `⏰ Payment Pending!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* is marked as Pending.\n\n📋 *Details:*\n• Room: ${payment.renterId.roomNumber}\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total Due: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nPlease pay at your earliest convenience.\n- Ramesh Rental Portal`;
+      } else if (payment.status === 'Partial') {
+        msg = `💳 Partial Payment Received!\n\nDear ${payment.renterId.name},\nA partial payment for *${payment.month}* has been recorded.\n\n📋 *Details:*\n• Room: ${payment.renterId.roomNumber}\n• Total Due: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n• Amount Paid: ₹${(payment.amountPaid || 0).toLocaleString('en-IN')}\n• Remaining: ₹${((payment.totalAmount || payment.amount) - (payment.amountPaid || 0)).toLocaleString('en-IN')}\n\nPlease clear the remaining balance.\n- Ramesh Rental Portal`;
+      } else {
+        msg = `📊 Payment Updated!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* has been updated.\n\n📋 *Details:*\n• Room: ${payment.renterId.roomNumber}\n• Total: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n• Status: ${payment.status}\n\n- Ramesh Rental Portal`;
       }
+      await sendWhatsApp(phone, msg);
+      whatsappSent = true;
+      console.log('[WhatsApp] Sent to', phone, '| Status:', payment.status, '| Tenant:', payment.renterId.name);
     } catch (waErr) {
       whatsappError = waErr.message;
       console.error('[WhatsApp ERROR]', waErr.message);
