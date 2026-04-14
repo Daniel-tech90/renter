@@ -162,7 +162,7 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="input-label">Month</label>
-              <input name="month" type="month" className="input" value={form.month} onChange={set} required disabled={!!payment} />
+              <input name="month" type="month" className="input" value={form.month} onChange={set} required />
             </div>
             <div>
               <label className="input-label">Rent Amount (₹)</label>
