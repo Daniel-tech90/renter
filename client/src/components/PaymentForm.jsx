@@ -79,12 +79,17 @@ export default function PaymentForm({ payment, onSuccess, onClose }) {
       let res;
       if (payment) {
         res = await paymentService.update(payment._id, payload);
+        const wa = res.data?.whatsapp;
+        if (wa === 'sent') toast.success('Payment updated & WhatsApp sent! ✅');
+        else if (wa === 'failed') toast.success('Payment updated, but WhatsApp message failed.');
+        else if (wa === 'skipped') toast.success('Payment updated. Tenant WhatsApp number not found.');
+        else toast.success('Payment updated!');
       } else {
         res = await paymentService.create(payload);
+        toast.success(form.isAdvance ? `Advance of ₹${form.advanceAmount} added!` : 'Payment recorded!');
       }
       const newAdv = res.data?.advanceBalance;
       if (newAdv !== undefined) setAdvanceBalance(newAdv);
-      toast.success(form.isAdvance ? `Advance of ₹${form.advanceAmount} added!` : payment ? 'Payment updated!' : 'Payment recorded!');
       onSuccess();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Something went wrong');

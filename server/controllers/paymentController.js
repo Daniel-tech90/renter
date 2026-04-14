@@ -188,27 +188,50 @@ exports.update = async (req, res) => {
     const unitsConsumed = Math.max(0, Number(currReading) - Number(prevReading));
     const electricityBill = unitsConsumed * Number(ratePerUnit);
     const totalAmount = Number(amount) + electricityBill;
+
     const prev = await Payment.findById(req.params.id);
-    const payment = await Payment.findByIdAndUpdate(req.params.id, { ...req.body, unitsConsumed, electricityBill, totalAmount }, {
-      new: true, runValidators: true,
-    }).populate('renterId', 'name roomNumber phone');
+    const payment = await Payment.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, unitsConsumed, electricityBill, totalAmount },
+      { new: true, runValidators: true }
+    ).populate('renterId', 'name roomNumber phone');
+
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
 
-    const statusChanged = prev.status !== payment.status;
-
-    if (statusChanged && payment.status === 'Paid') {
-      await sendWhatsApp(
-        payment.renterId.phone,
-        `✅ Payment Confirmed!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* has been confirmed.\n\n📋 *Details:*\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nThank you for your timely payment! 🙏\n- Ramesh Rental Portal`
-      );
-    } else if (statusChanged && payment.status === 'Pending') {
-      await sendWhatsApp(
-        payment.renterId.phone,
-        `⏰ Payment Reminder!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* is pending.\n\n📋 *Details:*\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total Due: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nPlease pay at your earliest convenience.\n- Ramesh Rental Portal`
-      );
+    // Validate phone number
+    const phone = payment.renterId?.phone;
+    if (!phone) {
+      console.warn('[WhatsApp SKIP] Tenant phone number not found for:', payment.renterId?.name);
+      return res.json({ payment, whatsapp: 'skipped', reason: 'Tenant WhatsApp number not found' });
     }
 
-    res.json(payment);
+    const statusChanged = prev.status !== payment.status;
+    let whatsappSent = false;
+    let whatsappError = null;
+
+    try {
+      if (payment.status === 'Paid') {
+        // Send on every update when status is Paid (not just on change)
+        const msg = `✅ Payment ${statusChanged ? 'Confirmed' : 'Updated'}!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* has been ${statusChanged ? 'confirmed' : 'updated'}.\n\n📋 *Details:*\n• Room: ${payment.renterId.roomNumber}\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n• Status: ${payment.status}\n• Date: ${payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('en-IN') : 'N/A'}\n\nThank you! 🙏\n- Ramesh Rental Portal`;
+        await sendWhatsApp(phone, msg);
+        whatsappSent = true;
+        console.log('[WhatsApp] Sent to', phone, '| Tenant:', payment.renterId.name);
+      } else if (statusChanged && payment.status === 'Pending') {
+        const msg = `⏰ Payment Reminder!\n\nDear ${payment.renterId.name},\nYour payment for *${payment.month}* is pending.\n\n📋 *Details:*\n• Room: ${payment.renterId.roomNumber}\n• Rent: ₹${payment.amount.toLocaleString('en-IN')}\n• Electricity: ₹${(payment.electricityBill || 0).toLocaleString('en-IN')}\n• Total Due: ₹${(payment.totalAmount || payment.amount).toLocaleString('en-IN')}\n\nPlease pay at your earliest convenience.\n- Ramesh Rental Portal`;
+        await sendWhatsApp(phone, msg);
+        whatsappSent = true;
+        console.log('[WhatsApp] Reminder sent to', phone, '| Tenant:', payment.renterId.name);
+      }
+    } catch (waErr) {
+      whatsappError = waErr.message;
+      console.error('[WhatsApp ERROR]', waErr.message);
+    }
+
+    res.json({
+      payment,
+      whatsapp: whatsappSent ? 'sent' : whatsappError ? 'failed' : 'skipped',
+      whatsappError: whatsappError || undefined,
+    });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
